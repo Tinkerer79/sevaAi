@@ -2,6 +2,7 @@
 // demo rows instead of SQLite. Grounds Seva AI answers in the platform's own
 // services/schemes data; never lets the model invent scheme facts.
 import { serviceRows, schemeRows } from './store.js';
+import { getSchemeCatalog } from './dataRoutes.js';
 
 const STOP = new Set(
   ('a an the and or of for to in on at is are am i me my we you your how what which when where who whom can could should would will do does did with about from as by it its this that these those need needs needed get got getting apply application applying want wanted tell please help me sir madam any some there here also into more most very much many such own same so than then them they he she his her him us our ours out up down over under again once').split(' ')
@@ -15,6 +16,7 @@ const tokens = (s) =>
     .filter((w) => w.length > 2 && !STOP.has(w));
 
 const parseJson = (text, fallback) => {
+  if (Array.isArray(text)) return text;
   try { return JSON.parse(text); } catch { return fallback; }
 };
 
@@ -48,14 +50,20 @@ function fmtService(s) {
 function fmtScheme(s) {
   const docs = parseJson(s.documents, []);
   const occ = parseJson(s.occupations, []);
+  const status = s.application_status === 'check_with_department'
+    ? 'Application availability: check with the department.'
+    : s.data_status === 'legacy_demo'
+      ? 'This is legacy sample data and needs official verification.'
+      : '';
   return [
     `SCHEME: ${s.name} — Department: ${s.dept_name || ''}`,
     `Benefits: ${s.benefits}`,
-    `Eligibility: ${s.eligibility} (age ${s.min_age ?? 'any'}–${s.max_age ?? 'any'}, occupation: ${occ.join('/')}, area: ${s.area}${s.max_income ? `, income up to ₹${s.max_income}` : ''})`,
+    `Eligibility: ${s.eligibility} (age ${s.min_age ?? 'any'}–${s.max_age ?? 'any'}${occ.length ? `, occupation: ${occ.join('/')}` : ''}${s.area ? `, area: ${s.area}` : ''}${s.max_income ? `, income up to ₹${s.max_income}` : ''})`,
     `Documents: ${docs.join('; ') || '—'}`,
-    `How to apply: ${s.process}`,
-    `Link: ${s.official_link || 'not available — apply at the department office'}`,
-    s.is_demo ? '(demo data)' : '',
+    `How to apply: ${s.process || (s.application_process || []).join(' ') || 'Confirm the current process with the department.'}`,
+    `Source: ${s.source_url || s.official_link || 'not available — confirm with the department'}`,
+    status,
+    s.source_note || '',
   ].filter(Boolean).join('\n');
 }
 
@@ -65,15 +73,16 @@ export const LANGUAGE_NAMES = {
   mni: 'Meiteilon (Manipuri), written in Bengali script',
 };
 
-export function buildContext(question, language) {
+export async function buildContext(question, language) {
   const qt = tokens(question);
+  const schemes = await getSchemeCatalog();
   const topServices = serviceRows
     .map((s) => ({ s, score: scoreRow(s, qt) }))
     .filter((x) => x.score > 0)
     .sort((a, b) => b.score - a.score)
     .slice(0, 4)
     .map((x) => fmtService(x.s));
-  const topSchemes = schemeRows
+  const topSchemes = schemes
     .map((sc) => ({ sc, score: scoreRow(sc, qt) }))
     .filter((x) => x.score > 0)
     .sort((a, b) => b.score - a.score)
@@ -82,7 +91,7 @@ export function buildContext(question, language) {
 
   const catalog =
     `All services on the platform: ${serviceRows.map((s) => s.name).join(', ')}.\n` +
-    `All schemes on the platform: ${schemeRows.map((s) => s.name).join(', ')}.`;
+    `All schemes on the platform: ${schemes.map((s) => s.name).join(', ')}.`;
 
   const matched = [...topServices, ...topSchemes].join('\n\n');
   return [

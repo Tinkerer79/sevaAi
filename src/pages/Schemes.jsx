@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api.js';
 import { useLang } from '../i18n.jsx';
@@ -19,6 +19,32 @@ export default function Schemes() {
   const [results, setResults] = useState(null);
   const [busy, setBusy] = useState(false);
   const [savedSlugs, setSavedSlugs] = useState(new Set());
+  const [catalog, setCatalog] = useState([]);
+  const [catalogBusy, setCatalogBusy] = useState(true);
+  const [catalogError, setCatalogError] = useState('');
+  const [scope, setScope] = useState('all');
+  const [department, setDepartment] = useState('all');
+  const [catalogSearch, setCatalogSearch] = useState('');
+
+  useEffect(() => {
+    api('/api/schemes')
+      .then((d) => setCatalog(d.schemes || []))
+      .catch(() => setCatalogError('Scheme catalog is temporarily unavailable. Please try again later.'))
+      .finally(() => setCatalogBusy(false));
+  }, []);
+
+  const departments = useMemo(() => [...new Set(catalog
+    .filter((s) => scope === 'all' || (scope === 'manipur' ? s.scope === 'manipur_state' : s.scope !== 'manipur_state'))
+    .map((s) => s.dept_name || s.department)
+    .filter(Boolean))].sort((a, b) => a.localeCompare(b)), [catalog, scope]);
+
+  const visibleSchemes = useMemo(() => catalog.filter((s) => {
+    const scopeMatch = scope === 'all' || (scope === 'manipur' ? s.scope === 'manipur_state' : s.scope !== 'manipur_state');
+    const departmentMatch = department === 'all' || (s.dept_name || s.department) === department;
+    const term = catalogSearch.trim().toLowerCase();
+    const searchMatch = !term || `${s.name} ${s.benefits} ${s.eligibility} ${s.dept_name || s.department}`.toLowerCase().includes(term);
+    return scopeMatch && departmentMatch && searchMatch;
+  }), [catalog, scope, department, catalogSearch]);
 
   const find = async (e) => {
     e.preventDefault();
@@ -54,6 +80,71 @@ export default function Schemes() {
           <p>{t('schemes.sub')}</p>
         </div>
       </div>
+
+      <section className="card" style={{ padding: 24, marginBottom: 24 }} aria-labelledby="scheme-catalog-heading">
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 14, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+          <div>
+            <div className="eyebrow">Scheme directory</div>
+            <h3 id="scheme-catalog-heading" style={{ margin: '4px 0' }}>Browse schemes by scope</h3>
+            <p style={{ margin: 0, color: 'var(--muted)', fontSize: 13 }}>Explore Manipur state schemes separately from central and other schemes.</p>
+          </div>
+          <div className="radio-row" role="tablist" aria-label="Scheme scope">
+            {[['all', 'All'], ['manipur', 'Manipur'], ['other', 'Other schemes']].map(([id, label]) => (
+              <button type="button" key={id} className={`radio-pill ${scope === id ? 'active' : ''}`}
+                onClick={() => { setScope(id); setDepartment('all'); }} role="tab" aria-selected={scope === id}>
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid grid-2" style={{ marginTop: 18, alignItems: 'end' }}>
+          <div className="field" style={{ marginBottom: 0 }}>
+            <label className="label" htmlFor="scheme-department">Department</label>
+            <select id="scheme-department" className="input" value={department} onChange={(e) => setDepartment(e.target.value)}>
+              <option value="all">All departments</option>
+              {departments.map((d) => <option key={d} value={d}>{d}</option>)}
+            </select>
+          </div>
+          <div className="field" style={{ marginBottom: 0 }}>
+            <label className="label" htmlFor="scheme-search">Search schemes</label>
+            <input id="scheme-search" className="input" value={catalogSearch} onChange={(e) => setCatalogSearch(e.target.value)} placeholder="Name, department or benefit" />
+          </div>
+        </div>
+
+        <div style={{ marginTop: 18 }}>
+          {catalogBusy ? <div style={{ color: 'var(--muted)', fontSize: 13 }}>Loading scheme catalog…</div> : null}
+          {catalogError ? <div className="tile-warn" role="alert" style={{ padding: 12, borderRadius: 8 }}>{catalogError}</div> : null}
+          {!catalogBusy && !catalogError && visibleSchemes.length === 0 ? <Empty icon="shield" title="No schemes in this section yet." sub="The catalog will grow as more department schemes are verified." /> : null}
+          {!catalogBusy && visibleSchemes.length > 0 && (
+            <div className="grid grid-2">
+              {visibleSchemes.map((s) => (
+                <article key={s.slug} className="card" style={{ padding: 18, boxShadow: 'none' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'flex-start' }}>
+                    <h4 style={{ margin: 0, fontSize: 15 }}>{s.name}</h4>
+                    <span className="badge badge-cyan">{s.scope === 'manipur_state' ? 'Manipur' : 'Other schemes'}</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: 7, margin: '8px 0', flexWrap: 'wrap' }}>
+                    <span className="badge">{s.dept_name || s.department}</span>
+                    {s.data_status === 'legacy_demo' ? <DemoChip /> : null}
+                    {s.application_status === 'check_with_department' ? <span className="badge" title="Current application window is not confirmed">Check with department</span> : null}
+                  </div>
+                  <p style={{ fontSize: 13, margin: '8px 0', color: 'var(--muted)' }}>{s.eligibility || s.summary}</p>
+                  <p style={{ fontSize: 13, margin: '0 0 10px' }}><b>{t('schemes.benefits')}:</b> {s.benefits}</p>
+                  {s.official_link || s.source_url ? (
+                    <a className="btn btn-outline btn-sm" href={s.official_link || s.source_url} target="_blank" rel="noreferrer">
+                      <Icon name="globe" size={13} /> {s.official_link ? t('contacts.website') : 'View source'}
+                    </a>
+                  ) : null}
+                </article>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      <div className="eyebrow" style={{ margin: '26px 0 10px' }}>Demo matcher · sample eligibility rules</div>
+      <p style={{ color: 'var(--muted)', fontSize: 13, margin: '0 0 12px' }}>The catalog above is source-linked. This prototype matcher uses sample rules and cannot confirm eligibility.</p>
 
       <form className="card" style={{ padding: 26 }} onSubmit={find}>
         <div className="grid grid-2">

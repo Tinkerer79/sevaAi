@@ -5,6 +5,8 @@ This folder contains the first data import for the SW-01 scheme finder:
 1. Run `schema.sql` in the Supabase SQL Editor.
 2. Run `seed.sql` after it succeeds.
 
+The schema migration and seed have been applied to the connected Supabase project. The `public.schemes` table is enabled for public read access under row-level security, and it currently contains seven seeded records. The seed uses upsert, so rerunning it updates those seven rows by slug.
+
 The catalog supports three scope tabs: **All**, **Manipur**, and **Other schemes**. Use `scope = 'manipur_state'` for Manipur state schemes and `scope = 'central_in_manipur'` for national schemes available through Manipur. Use `department` as the department filter. The `other` value is reserved for records outside those groups.
 
 This initial seed contains seven Manipur Social Welfare records with official source links. Several source documents establish criteria for their own reporting period but do not establish that applications are open today. Those records therefore use `application_status = 'check_with_department'` and `data_status = 'needs_confirmation'`. `last_verified_at` records when the official sources were checked; it does not imply that the scheme office confirmed current availability.

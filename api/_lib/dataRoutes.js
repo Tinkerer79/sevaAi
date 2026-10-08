@@ -7,6 +7,7 @@
 // not inject catch-all route params into req.query.
 import { serviceRows, schemeRows, parseService, parseScheme } from './store.js';
 import { cors, json } from './http.js';
+import { fetchSchemesFromSupabase } from './supabase.js';
 
 const OCCUPATIONS = ['student', 'farmer', 'business', 'salaried', 'unemployed', 'homemaker', 'daily_wage', 'street_vendor', 'senior_citizen'];
 const slice80 = (s) => String(s || '').trim().toLowerCase().slice(0, 80);
@@ -66,27 +67,92 @@ export async function schemesHandler(req, res) {
   if (req.method !== 'GET') return json(res, 405, { error: 'Method not allowed.' });
 
   const search = slice80(u.searchParams.get('search'));
-  let rows = schemeRows;
+  let rows;
+  try {
+    rows = await getSchemeCatalog();
+  } catch (error) {
+    console.error('Supabase scheme catalog request failed:', error.message);
+    return json(res, 503, { error: 'Scheme catalog is temporarily unavailable.' });
+  }
   if (search) {
     rows = rows.filter((s) =>
       s.name.toLowerCase().includes(search) ||
       s.benefits.toLowerCase().includes(search) ||
-      s.keywords.toLowerCase().includes(search));
+      s.keywords.join(' ').toLowerCase().includes(search) ||
+      s.dept_name.toLowerCase().includes(search));
   }
 
   if (!route) {
-    return json(res, 200, { schemes: rows.map(listRow).sort((a, b) => a.name.localeCompare(b.name)) });
+    return json(res, 200, { schemes: rows.sort((a, b) => a.name.localeCompare(b.name)) });
   }
 
-  const s = schemeRows.find((x) => x.slug === route.slice(0, 80));
+  const s = rows.find((x) => x.slug === route.slice(0, 80));
   if (!s) return json(res, 404, { error: 'Scheme not found.' });
-  return json(res, 200, { scheme: parseScheme(s) });
+  return json(res, 200, { scheme: s });
 }
 
-// The SQL SELECT for the list returns only these columns; parse() then fills
-// documents/occupations/keywords with empty arrays — replicated exactly.
-function listRow({ documents, occupations, keywords, process, official_link, max_income, min_age, max_age, department_id, ...list }) {
-  return { ...list, documents: [], occupations: [], keywords: [] };
+const CENTRAL_SCHEMES = new Set([
+  'post-matric-st-scholarship', 'pre-matric-scholarship-minorities', 'pm-kisan-scheme',
+  'pm-awas-gramin', 'pm-awas-urban', 'old-age-pension-scheme', 'widow-pension-scheme',
+  'pm-ujjwala', 'kcc-farmers', 'mgnrega-employment', 'pm-svanidhi', 'pmegp-business', 'phd-scholarship',
+]);
+
+function legacyRows(includeReplacedPensions = true) {
+  return schemeRows
+    .filter((s) => includeReplacedPensions || !['old-age-pension-scheme', 'widow-pension-scheme'].includes(s.slug))
+    .map((raw) => {
+      const s = parseScheme(raw);
+      return {
+        ...s,
+        scope: CENTRAL_SCHEMES.has(s.slug) ? 'central_in_manipur' : 'manipur_state',
+        department: s.dept_name || 'Government department',
+        summary: s.eligibility,
+        source_url: s.official_link,
+        source_note: 'Existing prototype sample. Recheck details against current official guidance.',
+        last_verified_at: null,
+        application_status: 'unknown',
+        data_status: 'legacy_demo',
+      };
+    });
+}
+
+function databaseRow(row) {
+  const rules = row.eligibility_rules || {};
+  const minAge = rules.min_age ?? (rules.min_age_exclusive != null ? rules.min_age_exclusive + 1 : null);
+  return {
+    id: row.slug,
+    slug: row.slug,
+    name: row.name,
+    dept_name: row.department,
+    department: row.department,
+    scope: row.scope,
+    summary: row.summary,
+    benefits: row.benefits,
+    eligibility: row.eligibility_text,
+    eligibility_rules: rules,
+    documents: Array.isArray(row.documents) ? row.documents : [],
+    process: Array.isArray(row.application_process) ? row.application_process.join(' ') : '',
+    application_process: Array.isArray(row.application_process) ? row.application_process : [],
+    official_link: row.official_link,
+    source_url: row.source_url,
+    source_note: row.source_note,
+    last_verified_at: row.last_verified_at,
+    application_status: row.application_status,
+    data_status: row.data_status,
+    is_demo: row.data_status === 'legacy_demo' ? 1 : 0,
+    min_age: minAge,
+    max_age: rules.max_age ?? null,
+    occupations: ['any'],
+    area: 'any',
+    max_income: rules.income_max_inr_year ?? null,
+    keywords: `${row.name} ${row.summary || ''} ${row.department}`.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean),
+  };
+}
+
+export async function getSchemeCatalog() {
+  const rows = await fetchSchemesFromSupabase();
+  if (rows === null) return legacyRows(true);
+  return [...rows.map(databaseRow), ...legacyRows(false)];
 }
 
 function match(req, res) {

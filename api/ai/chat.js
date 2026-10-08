@@ -47,7 +47,8 @@ export default async function handler(req, res) {
 
   try {
     const contents = [{ role: 'user', parts: [{ text: message }] }];
-    const systemInstruction = SYSTEM_PROMPT(language) + '\n\n' + buildContext(message, language);
+    const context = await buildContext(message, language);
+    const systemInstruction = SYSTEM_PROMPT(language) + '\n\n' + context;
     const result = await generate({ systemInstruction, contents });
     json(res, 200, {
       reply: result.text,

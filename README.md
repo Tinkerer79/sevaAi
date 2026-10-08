@@ -121,10 +121,12 @@ npm run build && npm start   # one server on :8787 serves API + built frontend
 
 **B. Vercel hybrid — static SPA + serverless functions (deployed production)**
 
-The `api/` directory deploys as Vercel serverless functions and serves everything that does not
-need a database: **Seva AI chat** (`/api/ai/chat`, keys stay server-side, rotation + cooldowns
-ported from `server/ai/`), the read-only **services / schemes / scheme-matcher / contacts /
-complaint-meta** demo-data endpoints, `/api/health`, and honest 501 stubs for auth.
+The `api/` directory deploys as Vercel serverless functions and serves **Seva AI chat**
+(`/api/ai/chat`, keys stay server-side, rotation + cooldowns ported from `server/ai/`), the
+read-only **services / schemes / scheme-matcher / contacts / complaint-meta** endpoints,
+`/api/health`, and honest 501 stubs for auth. The scheme catalog reads from Supabase when its
+server-side environment variables are configured; the service directory and other listed data
+remain sample data.
 
 1. Import/deploy the repo on Vercel → `vercel.json` picks up `dist` + `api/` automatically.
    Leave `VITE_API_BASE` unset so the frontend calls its own origin.
@@ -132,6 +134,8 @@ complaint-meta** demo-data endpoints, `/api/health`, and honest 501 stubs for au
    * `GEMINI_API_KEY_1..5` — same keys as `.env` (server-side only; never shipped to the browser)
    * `GEMINI_KEY_1..5_LABEL` (optional, shows masked labels in replies/health)
    * `GEMINI_MODEL=gemini-flash-lite-latest`, `AI_ROTATION_STRATEGY=round_robin`
+   * `SUPABASE_URL` — project API URL
+   * `SUPABASE_ANON_KEY` or `SUPABASE_PUBLISHABLE_KEY` — public read key; do not use a service-role key
 3. Not available in this mode: login/registration (501), complaint submit/track, saves, admin —
    they need the full backend (option C). Seva AI serves guests, so the assistant works fully.
 
