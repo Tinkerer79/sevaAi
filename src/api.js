@@ -4,7 +4,9 @@
 export const API_BASE = (import.meta.env.VITE_API_BASE || '').replace(/\/+$/, '');
 
 export async function api(path, { method = 'GET', body, formData } = {}) {
-  const opts = { method, headers: {} };
+  // Include the httpOnly session cookie when the frontend and API are hosted
+  // on different origins. Same-origin requests work with either setting.
+  const opts = { method, headers: {}, credentials: 'include' };
   if (body !== undefined) {
     opts.headers['Content-Type'] = 'application/json';
     opts.body = JSON.stringify(body);

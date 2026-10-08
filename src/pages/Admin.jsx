@@ -273,7 +273,7 @@ function ComplaintsPanel() {
                   {detail.complaint.photo ? (
                     <details style={{ marginBottom: 14 }}>
                       <summary style={{ cursor: 'pointer', fontSize: 14, fontWeight: 600 }}>{t('admin.viewImage')}</summary>
-                      <img src={`${API_BASE}/api/admin/complaints/${openId}/photo`} alt="Complaint" style={{ marginTop: 10, borderRadius: 12, border: '1px solid var(--border)', maxHeight: 300 }} />
+                      <img crossOrigin="use-credentials" src={`${API_BASE}/api/admin/complaints/${openId}/photo`} alt="Complaint" style={{ marginTop: 10, borderRadius: 12, border: '1px solid var(--border)', maxHeight: 300 }} />
                     </details>
                   ) : <p style={{ fontSize: 13, color: 'var(--muted)' }}>{t('admin.noPhoto')}</p>}
 

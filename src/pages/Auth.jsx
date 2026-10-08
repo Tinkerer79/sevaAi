@@ -137,10 +137,13 @@ export function AdminLoginPage() {
     setBusy(true); setErr('');
     try {
       const u = await login(email, password);
-      if (u.role !== 'admin') { setErr('This account does not have admin access.'); return; }
-      navigate('/admin');
-    } catch (error) { setErr(error.message); }
-    setBusy(false);
+      if (u.role !== 'admin') setErr('This account does not have admin access.');
+      else navigate('/admin');
+    } catch (error) {
+      setErr(error.message);
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (

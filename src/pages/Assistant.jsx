@@ -12,7 +12,7 @@ export default function Assistant() {
   const { t, lang } = useLang();
   const { user } = useAuth();
   const toast = useToast();
-  const [params] = useSearchParams();
+  const [params, setParams] = useSearchParams();
   const prefill = params.get('q') || '';
 
   const [messages, setMessages] = useState([]); // {role:'user'|'ai', text, error?, id}
@@ -67,7 +67,7 @@ export default function Assistant() {
       autoSent.current = true;
       send(prefill);
       // clean the URL so refresh doesn't resend
-      window.history.replaceState({}, '', '/assistant');
+      setParams({}, { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
