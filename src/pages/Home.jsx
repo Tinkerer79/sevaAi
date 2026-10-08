@@ -55,7 +55,8 @@ export default function Home() {
   };
 
   const onAskAI = () => {
-    navigate(`/assistant${ask.trim() ? `?q=${encodeURIComponent(ask.trim())}` : ''}`);
+    const question = ask.trim();
+    navigate('/assistant', { state: question ? { initialQuestion: question } : null });
   };
 
   const panel = popular.slice(0, 5);
@@ -237,9 +238,9 @@ export default function Home() {
               <p>{t('ai.sub')}</p>
             </div>
             <div className="actions">
-              <Link to="/assistant" className="btn btn-primary">
+              <button type="button" onClick={onAskAI} className="btn btn-primary">
                 <Icon name="chat" size={15} /> {t('common.askAI')}
-              </Link>
+              </button>
               <span className="note">{t('ai.note')}</span>
             </div>
           </div>

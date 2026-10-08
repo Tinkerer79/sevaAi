@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useLocation, useSearchParams, Link } from 'react-router-dom';
 import { api, ApiError } from '../api.js';
 import { useLang } from '../i18n.jsx';
 import { useAuth } from '../auth.jsx';
@@ -12,8 +12,9 @@ export default function Assistant() {
   const { t, lang } = useLang();
   const { user } = useAuth();
   const toast = useToast();
+  const location = useLocation();
   const [params, setParams] = useSearchParams();
-  const prefill = params.get('q') || '';
+  const prefill = location.state?.initialQuestion || params.get('q') || '';
 
   const [messages, setMessages] = useState([]); // {role:'user'|'ai', text, error?, id}
   const [input, setInput] = useState('');
