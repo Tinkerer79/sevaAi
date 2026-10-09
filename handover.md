@@ -43,7 +43,7 @@ Keep a secure backup: losing the key means encrypted complaint contacts and save
 ## Deployment/browser notes
 
 - The user-referenced `seva-ai-project-enclave.vercel.app` deployment is behind Vercel login protection in the available browser, so its app pages could not be inspected there.
-- Deployment for commit `6dce4eb` reached Ready. `/api/complaints/meta` and `/api/complaints/track/SM-2026-10482` both return HTTP 200 on `seva-ai-gold.vercel.app`; `/assistant` and `/schemes` direct loads return the SPA. The `seva-ai-project-enclave.vercel.app` alias still returns Vercel's authentication redirect from an unauthenticated request, so use the public `seva-ai-gold.vercel.app` alias for outside smoke checks.
+- Deployment for commit `0b26dd7` reached Ready. `/api/complaints/meta` and `/api/complaints/track/SM-2026-10482` both return HTTP 200 on `seva-ai-gold.vercel.app`; `/assistant` and `/schemes` direct loads return the SPA. The `seva-ai-project-enclave.vercel.app` alias still returns Vercel's authentication redirect from an unauthenticated request, so use the public `seva-ai-gold.vercel.app` alias for outside smoke checks.
 - Optional complaint photo uploads are still unavailable in the Vercel complaint handler; a submission with a photo gets a clear 400 response. The user's captured failing request had no photo.
 - No live form submission or OAuth sign-in was performed.
 
@@ -51,9 +51,8 @@ Keep a secure backup: losing the key means encrypted complaint contacts and save
 
 - Repository: `/home/tombi/sevaAi`
 - Branch: `master`; prior HEAD `9ff2ceb`; remote `origin` is `https://github.com/Tinkerer79/sevaAi.git`.
-- Commits `720dbdc` (implementation) and `6dce4eb` (complaint rewrite correction) were pushed to `origin/master`.
+- Commits `720dbdc` (implementation), `6dce4eb` (complaint rewrite correction), and `0b26dd7` (handover status) were pushed to `origin/master`.
 - Production Vite build passed after the routing correction (`npm run build`, Vite 5.4.21). API syntax checks and `git diff --check` passed; function count is 12.
-- Update this handover with the final commit and deployment result, then push the documentation update.
 - Remaining end-to-end checks need a signed-in citizen/admin session: submit a synthetic complaint, test retained chat turns/profile context, and test admin summary/status updates. No real personal data was submitted during smoke checks.
 
 ### Remaining checklist
@@ -63,7 +62,7 @@ Keep a secure backup: losing the key means encrypted complaint contacts and save
 - [x] Keep Vercel function count within Hobby limit (12).
 - [x] Commit and push implementation (`720dbdc`) and complaint rewrite fix (`6dce4eb`).
 - [x] Confirm the latest deployment is Ready and the complaint metadata/demo tracker endpoints return 200 on the public alias.
-- [ ] Push this final handover status update.
+- [x] Push this handover and deployment status (`0b26dd7`).
 - [ ] Complete authenticated complaint, chat-history, and admin smoke checks.
 - [ ] Have a qualified reviewer assess privacy notices, legal basis/consent, retention/deletion, breach response, vendor terms and any child-user requirements before presenting this as compliant.
 - [ ] Optional: provision private photo storage if Vercel complaint photo uploads are required.
