@@ -4,8 +4,7 @@ import { useAuth } from '../auth.jsx';
 import { api, API_BASE } from '../api.js';
 import { useNavigate } from 'react-router-dom';
 import { Icon, Empty, StatusBadge, PriorityBadge, Spinner, useToast } from '../components/UI.jsx';
-
-const CAT_LABELS = { road_damage: 'Road damage', garbage_waste: 'Garbage / waste', streetlight: 'Streetlight', water_supply: 'Water supply', drainage: 'Drainage', public_infrastructure: 'Infrastructure', other: 'Other' };
+import Markdown from '../components/ChatBits.jsx';
 
 function BarChart({ title, data, formatter = (x) => x }) {
   const max = Math.max(1, ...data.map((d) => d.n));
@@ -175,8 +174,8 @@ function KeysPanel() {
   );
 }
 
-function ComplaintsPanel() {
-  const { t } = useLang();
+function ComplaintsPanel({ request = api }) {
+  const { t, lang } = useLang();
   const toast = useToast();
   const [rows, setRows] = useState(null);
   const [status, setStatus] = useState('');
@@ -185,21 +184,33 @@ function ComplaintsPanel() {
   const [detail, setDetail] = useState(null);
   const [depts, setDepts] = useState([]);
   const [form, setForm] = useState({ status: '', priority: '', dept_name: '', note: '' });
+  const [summary, setSummary] = useState('');
+  const [summaryBusy, setSummaryBusy] = useState(false);
+  const [summaryError, setSummaryError] = useState('');
 
   const load = useCallback(() => {
     const p = new URLSearchParams();
     if (status) p.set('status', status);
     if (search.trim()) p.set('search', search.trim());
-    api(`/api/admin/complaints?${p}`).then((d) => setRows(d.complaints)).catch(() => setRows([]));
-  }, [status, search]);
+    request(`/api/admin/complaints?${p}`).then((d) => setRows(d.complaints)).catch(() => setRows([]));
+  }, [status, search, request]);
 
   useEffect(() => { load(); }, [load]);
-  useEffect(() => { api('/api/admin/departments').then((d) => setDepts(d.departments)).catch(() => {}); }, []);
+  useEffect(() => { request('/api/admin/departments').then((d) => setDepts(d.departments)).catch(() => {}); }, [request]);
+
+  const summarize = async () => {
+    setSummaryBusy(true); setSummaryError(''); setSummary('');
+    try {
+      const result = await request('/api/admin/complaints/summary', { method: 'POST', body: { language: lang } });
+      setSummary(result.summary || '');
+    } catch (error) { setSummaryError(error.message || t('admin.summaryError')); }
+    finally { setSummaryBusy(false); }
+  };
 
   const openDetail = async (id) => {
     setOpenId(id); setDetail(null);
     try {
-      const d = await api(`/api/admin/complaints/${id}`);
+      const d = await request(`/api/admin/complaints/${id}`);
       setDetail(d);
       setForm({ status: d.complaint.status, priority: d.complaint.priority, dept_name: d.complaint.dept_name || '', note: '' });
     } catch { setDetail(null); }
@@ -207,7 +218,7 @@ function ComplaintsPanel() {
 
   const save = async () => {
     try {
-      await api(`/api/admin/complaints/${openId}`, { method: 'PATCH', body: form });
+      await request(`/api/admin/complaints/${openId}`, { method: 'PATCH', body: form });
       toast(`Complaint ${openId} updated`);
       setForm((f) => ({ ...f, note: '' }));
       openDetail(openId);
@@ -228,7 +239,15 @@ function ComplaintsPanel() {
           ))}
         </div>
         <input className="input" style={{ flex: 1, minWidth: 160, width: 'auto' }} placeholder="Search ID / location…" value={search} onChange={(e) => setSearch(e.target.value)} />
+        <button className="btn btn-primary btn-sm" onClick={summarize} disabled={summaryBusy}>
+          {summaryBusy ? <Spinner size={14} /> : <Icon name="sparkle" size={14} />} {summaryBusy ? t('admin.summarizing') : t('admin.summarize')}
+        </button>
       </div>
+      {summaryError ? <div className="tile-warn" role="alert" style={{ padding: 12, borderRadius: 8, marginBottom: 14 }}>{summaryError}</div> : null}
+      {summary ? <section className="card" aria-live="polite" style={{ padding: 18, marginBottom: 14 }}>
+        <h3 style={{ fontSize: 16 }}>{t('admin.summaryTitle')}</h3>
+        <div className="markdown"><Markdown text={summary} /></div>
+      </section> : null}
 
       {!rows ? <div className="skeleton" style={{ height: 220 }} /> : rows.length === 0 ? <Empty title="No complaints found" /> : (
         <div className="table-wrap card">
@@ -238,7 +257,7 @@ function ComplaintsPanel() {
               {rows.map((c) => (
                 <tr key={c.complaint_id} onClick={() => openDetail(c.complaint_id)}>
                   <td><b>{c.complaint_id}</b></td>
-                  <td>{CAT_LABELS[c.category] || c.category}</td>
+                  <td>{t(`cat.${c.category}`)}</td>
                   <td style={{ maxWidth: 190, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.location}, {c.district}</td>
                   <td>{new Date(c.created_at + 'Z').toLocaleDateString()}</td>
                   <td><PriorityBadge priority={c.priority} /></td>
@@ -331,14 +350,22 @@ function ComplaintsPanel() {
 
 export default function Admin() {
   const { t } = useLang();
-  const { user } = useAuth();
+  const { user, authClient } = useAuth();
   const navigate = useNavigate();
   const [tab, setTab] = useState('overview');
   const [stats, setStats] = useState(null);
+  const request = useCallback(async (path, options = {}) => {
+    let headers = options.headers || {};
+    if (authClient) {
+      const { data } = await authClient.auth.getSession();
+      if (data.session?.access_token) headers = { ...headers, Authorization: `Bearer ${data.session.access_token}` };
+    }
+    return api(path, { ...options, headers });
+  }, [authClient]);
 
   useEffect(() => {
-    if (user && user.role === 'admin') api('/api/admin/stats').then(setStats).catch(() => {});
-  }, [user, tab]);
+    if (user && user.role === 'admin') request('/api/admin/stats').then(setStats).catch(() => {});
+  }, [user, tab, request]);
 
   if (user && user.role !== 'admin') {
     return <div className="page container"><Empty icon="lock" title="Admin access required" sub="Log in with an administrator account." /></div>;
@@ -379,7 +406,7 @@ export default function Admin() {
               ))}
             </div>
             <div className="grid grid-2" style={{ marginTop: 16 }}>
-              <BarChart title={t('admin.byCategory')} data={stats.byCategory} formatter={(k) => CAT_LABELS[k] || k} />
+              <BarChart title={t('admin.byCategory')} data={stats.byCategory} formatter={(k) => t(`cat.${k}`)} />
               <BarChart title={t('admin.byDistrict')} data={stats.byDistrict} />
             </div>
             <div className="grid grid-2" style={{ marginTop: 16 }}>
@@ -390,7 +417,7 @@ export default function Admin() {
         )
       )}
 
-      {tab === 'complaints' && <ComplaintsPanel />}
+      {tab === 'complaints' && <ComplaintsPanel request={request} />}
       {tab === 'keys' && <KeysPanel />}
     </div>
   );

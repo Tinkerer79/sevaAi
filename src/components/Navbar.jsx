@@ -41,12 +41,12 @@ export default function Navbar() {
       <div className="topstrip" aria-hidden="true"></div>
       <header className="nav">
         <div className="container nav-inner">
-          <Link to="/" className="brand" onClick={() => setOpen(false)} aria-label="SevaManipur home">
+          <Link to="/" className="brand" onClick={() => setOpen(false)} aria-label={t('brand.home')}>
             <BrandMark />
             <span className="brand-name">SevaManipur <span className="brand-ai">AI</span></span>
           </Link>
 
-          <nav className="nav-links" aria-label="Primary">
+          <nav className="nav-links" aria-label={t('common.primaryNav')}>
             {links.map(([to, key]) => (
               <NavLink key={to} to={to} end={to === '/'} className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>
                 {t(key)}
@@ -86,7 +86,7 @@ export default function Navbar() {
               </Link>
             )}
 
-            <button className="hamburger" onClick={() => setOpen(!open)} aria-label="Menu" aria-expanded={open}>
+            <button className="hamburger" onClick={() => setOpen(!open)} aria-label={t('common.menu')} aria-expanded={open}>
               <Icon name={open ? 'x' : 'menu'} size={19} />
             </button>
           </div>

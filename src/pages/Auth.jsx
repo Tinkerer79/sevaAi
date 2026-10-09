@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useLang } from '../i18n.jsx';
 import { useAuth } from '../auth.jsx';
 import { Icon } from '../components/UI.jsx';
+import googleIcon from '../assets/google-icon.svg';
 
 function AuthShell({ title, sub, children, alt }) {
   const { t } = useLang();
@@ -38,24 +39,25 @@ function DemoHint({ cred }) {
   );
 }
 
-function SocialLoginButtons({ onSignIn, disabled }) {
+function SocialLoginButtons({ onSignIn, disabled, t }) {
   return (
     <div style={{ display: 'grid', gap: 9, margin: '18px 0' }}>
       <button type="button" className="btn btn-outline btn-lg" disabled={disabled} onClick={() => onSignIn('google')}>
-        <b aria-hidden="true" style={{ fontSize: 16, marginRight: 7 }}>G</b> Continue with Google
+        <img aria-hidden="true" src={googleIcon} width="17" height="17" style={{ marginRight: 7, flexShrink: 0 }} />
+        {t('auth.continueGoogle')}
       </button>
       <button type="button" className="btn btn-outline btn-lg" disabled={disabled} onClick={() => onSignIn('github')}>
         <svg aria-hidden="true" width="17" height="17" viewBox="0 0 32.58 32.58" style={{ marginRight: 7, flexShrink: 0 }}>
           <path d="M16.29,0a16.29,16.29,0,0,0-5.15,31.75c.82.15,1.11-.36,1.11-.79s0-1.41,0-2.77C7.7,29.18,6.74,26,6.74,26a4.36,4.36,0,0,0-1.81-2.39c-1.47-1,.12-1,.12-1a3.43,3.43,0,0,1,2.49,1.68,3.48,3.48,0,0,0,4.74,1.36,3.46,3.46,0,0,1,1-2.18c-3.62-.41-7.42-1.81-7.42-8a6.3,6.3,0,0,1,1.67-4.37,5.94,5.94,0,0,1,.16-4.31s1.37-.44,4.48,1.67a15.41,15.41,0,0,1,8.16,0c3.11-2.11,4.47-1.67,4.47-1.67A5.91,5.91,0,0,1,25,11.07a6.3,6.3,0,0,1,1.67,4.37c0,6.26-3.81,7.63-7.44,8a3.85,3.85,0,0,1,1.11,3c0,2.18,0,3.94,0,4.47s.29.94,1.12.78A16.29,16.29,0,0,0,16.29,0Z" fill="currentColor" />
         </svg>
-        Continue with GitHub
+        {t('auth.continueGithub')}
       </button>
     </div>
   );
 }
 
-function AuthDivider() {
-  return <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--muted)', fontSize: 12, margin: '16px 0' }}><span style={{ height: 1, background: 'var(--border)', flex: 1 }} />OR WITH EMAIL<span style={{ height: 1, background: 'var(--border)', flex: 1 }} /></div>;
+function AuthDivider({ t }) {
+  return <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--muted)', fontSize: 12, margin: '16px 0' }}><span style={{ height: 1, background: 'var(--border)', flex: 1 }} />{t('auth.orEmail')}<span style={{ height: 1, background: 'var(--border)', flex: 1 }} /></div>;
 }
 
 function runProviderSignIn(signInWithProvider, provider, setBusy, setErr) {
@@ -95,8 +97,8 @@ export function LoginPage() {
     <AuthShell title={t('auth.loginTitle')} sub={t('auth.loginSub')}
       alt={<span>{t('auth.noAccount')} <Link to="/register">{t('auth.registerTitle').split(' ').slice(0, 3).join(' ')}</Link></span>}>
       {authMode === 'supabase' && <>
-        <SocialLoginButtons onSignIn={socialSignIn} disabled={!ready || busy} />
-        <AuthDivider />
+        <SocialLoginButtons onSignIn={socialSignIn} disabled={!ready || busy} t={t} />
+        <AuthDivider t={t} />
       </>}
       <form onSubmit={submit}>
         <div className="field">
@@ -142,8 +144,8 @@ export function RegisterPage() {
     <AuthShell title={t('auth.registerTitle')} sub={t('auth.registerSub')}
       alt={<span>{t('auth.haveAccount')} <Link to="/login">{t('nav.login')}</Link></span>}>
       {authMode === 'supabase' && <>
-        <SocialLoginButtons onSignIn={socialSignIn} disabled={!ready || busy} />
-        <AuthDivider />
+        <SocialLoginButtons onSignIn={socialSignIn} disabled={!ready || busy} t={t} />
+        <AuthDivider t={t} />
       </>}
       <form onSubmit={submit}>
         <div className="field">
@@ -156,7 +158,7 @@ export function RegisterPage() {
         </div>
         <div className="field">
           <label className="label" htmlFor="ph">{t('common.phone')}</label>
-          <input id="ph" className="input" inputMode="numeric" value={form.phone} onChange={(e) => set('phone', e.target.value)} placeholder="10-digit mobile" />
+          <input id="ph" className="input" inputMode="numeric" value={form.phone} onChange={(e) => set('phone', e.target.value)} placeholder={t('auth.phonePlaceholder')} />
         </div>
         <div className="field">
           <label className="label" htmlFor="pw">{t('common.password')}</label>

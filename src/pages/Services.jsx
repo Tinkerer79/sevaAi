@@ -4,11 +4,18 @@ import { api } from '../api.js';
 import { useLang } from '../i18n.jsx';
 import { useAuth } from '../auth.jsx';
 import { Icon, Empty, DemoChip, Spinner, useToast } from '../components/UI.jsx';
+import AiInfoModal from '../components/AiInfoModal.jsx';
 
 const CATEGORY_ICONS = {
   Certificates: 'file', Education: 'layers', Health: 'shield', Agriculture: 'grid',
   Transport: 'map', Employment: 'trend', Business: 'building', 'Social Welfare': 'user',
   'Land & Revenue': 'pin', 'Civic Services': 'settings',
+};
+const CATEGORY_LABELS = {
+  Certificates: 'category.certificates', Education: 'category.education', Health: 'category.health',
+  Agriculture: 'category.agriculture', Transport: 'category.transport', Employment: 'category.employment',
+  Business: 'category.business', 'Social Welfare': 'category.socialWelfare',
+  'Land & Revenue': 'category.landRevenue', 'Civic Services': 'category.civicServices',
 };
 
 export function ServicesPage() {
@@ -19,6 +26,7 @@ export function ServicesPage() {
   const search = params.get('search') || '';
   const category = params.get('category') || 'All';
   const [searchInput, setSearchInput] = useState(search);
+  const [selectedService, setSelectedService] = useState(null);
 
   useEffect(() => { setSearchInput(params.get('search') || ''); }, [params]);
 
@@ -63,7 +71,7 @@ export function ServicesPage() {
           aria-label={t('common.search')} />
       </div>
 
-      <div className="cat-row" role="group" aria-label={t('common.category')}>
+          <div className="cat-row" role="group" aria-label={t('common.category')}>
         {categories.map((c) => (
           <button key={c} className={`cat-chip ${category === c ? 'active' : ''}`}
             onClick={() => {
@@ -71,7 +79,7 @@ export function ServicesPage() {
               c === 'All' ? next.delete('category') : next.set('category', c);
               setParams(next);
             }}>
-            {c}
+            {c === 'All' ? t('common.all') : t(CATEGORY_LABELS[c] || c)}
           </button>
         ))}
       </div>
@@ -97,6 +105,9 @@ export function ServicesPage() {
                 <Link to={`/services/${s.slug}`} className="btn btn-outline btn-sm">
                   {t('pop.viewService')} <Icon name="chevron" size={13} />
                 </Link>
+                <button type="button" className="btn btn-primary btn-sm" onClick={() => setSelectedService(s)}>
+                  <Icon name="sparkle" size={13} /> {t('aiInfo.moreInfo')}
+                </button>
                 <Link to={`/assistant?q=${encodeURIComponent(`Explain ${s.name}: eligibility, documents and how to apply.`)}`}
                   className="btn btn-ghost btn-sm" style={{ marginLeft: 'auto' }}>
                   <Icon name="chat" size={13} /> {t('nav.assistant')}
@@ -105,6 +116,15 @@ export function ServicesPage() {
             </article>
           ))}
         </div>
+      )}
+      {selectedService && (
+        <AiInfoModal type="service" slug={selectedService.slug} title={selectedService.name}
+          sourceUrl={selectedService.official_link} onClose={() => setSelectedService(null)}>
+          <p>{selectedService.description}</p>
+          {selectedService.eligibility ? <p><b>{t('services.eligibility')}:</b> {selectedService.eligibility}</p> : null}
+          <div className="badge">{selectedService.dept_name || selectedService.category}</div>
+          {selectedService.is_demo ? <DemoChip /> : null}
+        </AiInfoModal>
       )}
     </div>
   );
@@ -119,6 +139,7 @@ export function ServiceDetailPage() {
   const [service, setService] = useState(null);
   const [error, setError] = useState(null);
   const [saved, setSaved] = useState(false);
+  const [showAiInfo, setShowAiInfo] = useState(false);
 
   useEffect(() => {
     setService(null); setError(null);
@@ -167,6 +188,9 @@ export function ServiceDetailPage() {
               onClick={() => navigate(`/assistant?q=${encodeURIComponent(`Explain how to apply for: ${service.name}. What documents do I need and where do I apply?`)}`)}>
               <Icon name="chat" size={14} /> {t('common.askAI')}
             </button>
+            <button className="btn btn-outline btn-sm" onClick={() => setShowAiInfo(true)}>
+              <Icon name="sparkle" size={14} /> {t('aiInfo.moreInfo')}
+            </button>
           </div>
         </div>
         <p style={{ marginTop: 14 }}>{service.description}</p>
@@ -209,11 +233,20 @@ export function ServiceDetailPage() {
               <Icon name="globe" size={14} /> {t('services.link')}
             </a>
           ) : (
-            <span className="badge badge-grey"><Icon name="info" size={12} /> Apply at the department office (no online portal listed)</span>
+            <span className="badge badge-grey"><Icon name="info" size={12} /> {t('services.noPortal')}</span>
           )}
           <Link to="/documents" className="btn btn-outline btn-sm"><Icon name="file" size={14} /> {t('nav.documents')}</Link>
         </div>
       </div>
+      {showAiInfo && (
+        <AiInfoModal type="service" slug={service.slug} title={service.name}
+          sourceUrl={service.official_link} onClose={() => setShowAiInfo(false)}>
+          <p>{service.description}</p>
+          <p><b>{t('services.eligibility')}:</b> {service.eligibility}</p>
+          <p><b>{t('services.docs')}:</b> {service.documents.map((item) => item.item || item).join(', ')}</p>
+          {service.is_demo ? <DemoChip /> : null}
+        </AiInfoModal>
+      )}
     </div>
   );
 }

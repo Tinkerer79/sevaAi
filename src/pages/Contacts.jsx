@@ -26,7 +26,7 @@ export default function Contacts() {
     <div className="page container" style={{ paddingTop: 34, maxWidth: 940 }}>
       <div className="section-head">
         <div>
-          <div className="eyebrow">Directory · {t('common.demo')}</div>
+          <div className="eyebrow">{t('contacts.directory')} · {t('common.demo')}</div>
           <h2>{t('contacts.title')}</h2>
           <p>{t('contacts.sub')}</p>
         </div>
@@ -38,7 +38,7 @@ export default function Contacts() {
           <input className="input" style={{ paddingLeft: 40 }} placeholder={t('common.search') + '…'} value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
         <select className="select" style={{ width: 'auto', minWidth: 160 }} value={district} onChange={(e) => setDistrict(e.target.value)}>
-          {districts.map((d) => <option key={d} value={d}>{d === 'All' ? 'All Districts' : d}</option>)}
+          {districts.map((d) => <option key={d} value={d}>{d === 'All' ? t('contacts.allDistricts') : d}</option>)}
         </select>
       </div>
 
@@ -68,7 +68,7 @@ export default function Contacts() {
                 <a className="btn btn-primary btn-sm" href={`tel:${c.phone.replace(/\s/g, '')}`}><Icon name="phone" size={13} /> {t('contacts.call')}</a>
                 {c.email && <a className="btn btn-outline btn-sm" href={`mailto:${c.email}`}><Icon name="mail" size={13} /> {t('contacts.email')}</a>}
                 {c.website && <a className="btn btn-outline btn-sm" href={c.website} target="_blank" rel="noreferrer"><Icon name="globe" size={13} /> {t('contacts.website')}</a>}
-                {c.is_demo ? <DemoChip /> : <span className="badge badge-green"><Icon name="check" size={11} /> National helpline</span>}
+                {c.is_demo ? <DemoChip /> : <span className="badge badge-green"><Icon name="check" size={11} /> {t('contacts.nationalHelpline')}</span>}
               </div>
             </div>
           ))}

@@ -16,16 +16,16 @@ export default function Footer() {
             </div>
             <p style={{ margin: '0 0 12px' }}>{t('footer.tagline')}</p>
             <div className="helpline">
-              <span><Icon name="phone" size={12} style={{ verticalAlign: '-2px' }} /> 112 · Police</span>
-              <span><Icon name="phone" size={12} style={{ verticalAlign: '-2px' }} /> 108 · Ambulance</span>
-              <span><Icon name="phone" size={12} style={{ verticalAlign: '-2px' }} /> 1098 · Child</span>
+              <span><Icon name="phone" size={12} style={{ verticalAlign: '-2px' }} /> 112 · {t('footer.police')}</span>
+              <span><Icon name="phone" size={12} style={{ verticalAlign: '-2px' }} /> 108 · {t('footer.ambulance')}</span>
+              <span><Icon name="phone" size={12} style={{ verticalAlign: '-2px' }} /> 1098 · {t('footer.child')}</span>
             </div>
           </div>
 
           <div>
             <h4>{t('foot.popular')}</h4>
             <div style={{ display: 'grid', gap: 8 }}>
-              <Link to="/services?search=income%20certificate">Income Certificate</Link>
+              <Link to="/services?search=income%20certificate">{t('services.incomeCertificate')}</Link>
               <Link to="/services?category=Education">{t('foot.scholarships')}</Link>
               <Link to="/schemes">{t('nav.schemes')}</Link>
               <Link to="/services?category=Social%20Welfare">{t('foot.welfare')}</Link>

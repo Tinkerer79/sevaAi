@@ -35,15 +35,17 @@ export default function Markdown({ text }) {
 }
 
 function rich(s) {
-  // **bold**, *italic* and `code` → spans
+  // Safe inline markdown: formatting is rendered as React elements, and links
+  // are restricted to http(s) so a model reply cannot create javascript: URLs.
   const parts = [];
-  const re = /\*\*(.+?)\*\*|\*(.+?)\*|`(.+?)`/g;
+  const re = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)|\*\*(.+?)\*\*|\*(.+?)\*|`(.+?)`/g;
   let last = 0, m, k = 0;
   while ((m = re.exec(s))) {
     if (m.index > last) parts.push(s.slice(last, m.index));
-    if (m[1]) parts.push(<b key={k++}>{m[1]}</b>);
-    else if (m[2]) parts.push(<i key={k++} style={{ color: 'var(--muted)' }}>{m[2]}</i>);
-    else parts.push(<code key={k++} style={{ background: '#f1f5fb', borderRadius: 5, padding: '1px 5px', fontSize: '0.9em' }}>{m[3]}</code>);
+    if (m[1]) parts.push(<a key={k++} href={m[2]} target="_blank" rel="noopener noreferrer">{m[1]}</a>);
+    else if (m[3]) parts.push(<b key={k++}>{m[3]}</b>);
+    else if (m[4]) parts.push(<i key={k++} style={{ color: 'var(--muted)' }}>{m[4]}</i>);
+    else parts.push(<code key={k++} style={{ background: '#f1f5fb', borderRadius: 5, padding: '1px 5px', fontSize: '0.9em' }}>{m[5]}</code>);
     last = m.index + m[0].length;
   }
   if (last < s.length) parts.push(s.slice(last));

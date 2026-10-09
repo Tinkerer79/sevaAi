@@ -3,9 +3,14 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "rewrites": [
+    { "source": "/api/complaints/meta", "destination": "/api/complaints?path=meta" },
+    { "source": "/api/ai/conversations/:id", "destination": "/api/ai/chat?path=conversations/:id" },
+    { "source": "/api/ai/conversations", "destination": "/api/ai/chat?path=conversations" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
   "functions": {
-    "api/ai/chat.js": { "maxDuration": 30 }
+    "api/ai/chat.js": { "maxDuration": 30 },
+    "api/ai/explain.js": { "maxDuration": 30 },
+    "api/admin/[[...path]].js": { "maxDuration": 30 }
   }
 }

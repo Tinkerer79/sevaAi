@@ -109,9 +109,8 @@ separate **Express + SQLite backend**. `vercel.json` is already configured:
 
 ### Architecture note (important)
 
-The full backend uses a file-based SQLite database and long-running Express — accounts, complaint
-submission/tracking and saves **cannot run as Vercel serverless functions** (ephemeral filesystem).
-Three supported setups:
+The local Express backend uses SQLite. The Vercel deployment uses serverless API functions and
+Supabase for persistent complaint data and signed-in chat history.
 
 **A. Demo runs fully local (nothing to configure)**
 
@@ -121,13 +120,10 @@ npm run build && npm start   # one server on :8787 serves API + built frontend
 
 **B. Vercel hybrid — static SPA + serverless functions (deployed production)**
 
-The `api/` directory deploys as Vercel serverless functions and serves **Seva AI chat**
-(`/api/ai/chat`, keys stay server-side, rotation + cooldowns ported from `server/ai/`), the
-read-only **services / schemes / scheme-matcher / contacts / complaint-meta** endpoints,
-`/api/health`, and the public Supabase Auth configuration endpoint. Login, registration and Google /
-GitHub OAuth run through Supabase Auth in the browser. The scheme catalog reads from Supabase when
-its server-side environment variables are configured; the service directory and other listed data
-remain sample data.
+The `api/` directory deploys the service and scheme catalog, Seva AI, Supabase Auth, complaint
+submission/tracking, and admin complaint tools as Vercel functions. Signed-in chat history and
+complaints persist in Supabase. Google/GitHub sign-in runs through Supabase Auth. Scheme and service
+explanations are generated on demand by Seva AI; reference records still come from the catalog.
 
 1. Import/deploy the repo on Vercel → `vercel.json` picks up `dist` + `api/` automatically.
    Leave `VITE_API_BASE` unset so the frontend calls its own origin.
@@ -137,11 +133,12 @@ remain sample data.
    * `GEMINI_MODEL=gemini-flash-lite-latest`, `AI_ROTATION_STRATEGY=round_robin`
    * `SUPABASE_URL` — project API URL
    * `SUPABASE_ANON_KEY` or `SUPABASE_PUBLISHABLE_KEY` — public read key; do not use a service-role key
+   * `PII_ENCRYPTION_KEY` — generate a dedicated 32-byte key with `openssl rand -base64 32`; keep it only in Vercel Environment Variables. Complaint names/phones and saved chat titles/messages are encrypted by the server before storage. If the key is lost, those values cannot be decrypted; back it up securely and do not replace it without a planned re-encryption.
    * `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` also enable Supabase Auth. Configure Google and
      GitHub providers and allowed callback URLs as described in [Supabase OAuth setup](supabase/README.md).
-3. Complaint submit/track, saved items and the admin dashboard still need the full backend
-   (option C). In Vercel mode, citizen sign-in is available for identity, then users return to the
-   scheme finder; save controls are hidden until persistence is connected. Seva AI also serves guests.
+3. Redeploy after setting the environment variables. Complaint submission and encrypted chat history
+   fail closed until `PII_ENCRYPTION_KEY` is configured. Guest chats are temporary; signed-in chats
+   are saved to Supabase and retain at most the latest 100 messages per conversation.
 
 **C. Frontend on Vercel + full backend hosted elsewhere (Railway / Render / Fly / a VPS / your machine)**
 

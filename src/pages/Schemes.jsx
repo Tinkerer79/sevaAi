@@ -4,6 +4,7 @@ import { api } from '../api.js';
 import { useLang } from '../i18n.jsx';
 import { useAuth } from '../auth.jsx';
 import { Icon, Empty, DemoChip, Spinner, useToast } from '../components/UI.jsx';
+import AiInfoModal from '../components/AiInfoModal.jsx';
 
 const OCCUPATIONS = ['student', 'farmer', 'business', 'salaried', 'unemployed', 'homemaker', 'daily_wage', 'street_vendor', 'senior_citizen'];
 
@@ -25,6 +26,7 @@ export default function Schemes() {
   const [scope, setScope] = useState('all');
   const [department, setDepartment] = useState('all');
   const [catalogSearch, setCatalogSearch] = useState('');
+  const [selectedScheme, setSelectedScheme] = useState(null);
 
   useEffect(() => {
     api('/api/schemes')
@@ -84,12 +86,12 @@ export default function Schemes() {
       <section className="card" style={{ padding: 24, marginBottom: 24 }} aria-labelledby="scheme-catalog-heading">
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: 14, alignItems: 'flex-start', flexWrap: 'wrap' }}>
           <div>
-            <div className="eyebrow">Scheme directory</div>
-            <h3 id="scheme-catalog-heading" style={{ margin: '4px 0' }}>Browse schemes by scope</h3>
-            <p style={{ margin: 0, color: 'var(--muted)', fontSize: 13 }}>Explore Manipur state schemes separately from central and other schemes.</p>
+            <div className="eyebrow">{t('schemes.directory')}</div>
+            <h3 id="scheme-catalog-heading" style={{ margin: '4px 0' }}>{t('schemes.browseHeading')}</h3>
+            <p style={{ margin: 0, color: 'var(--muted)', fontSize: 13 }}>{t('schemes.browseSub')}</p>
           </div>
-          <div className="radio-row" role="tablist" aria-label="Scheme scope">
-            {[['all', 'All'], ['manipur', 'Manipur'], ['other', 'Other schemes']].map(([id, label]) => (
+          <div className="radio-row" role="tablist" aria-label={t('schemes.scope')}>
+            {[['all', t('common.all')], ['manipur', t('schemes.manipur')], ['other', t('schemes.other')]].map(([id, label]) => (
               <button type="button" key={id} className={`radio-pill ${scope === id ? 'active' : ''}`}
                 onClick={() => { setScope(id); setDepartment('all'); }} role="tab" aria-selected={scope === id}>
                 {label}
@@ -100,42 +102,50 @@ export default function Schemes() {
 
         <div className="grid grid-2" style={{ marginTop: 18, alignItems: 'end' }}>
           <div className="field" style={{ marginBottom: 0 }}>
-            <label className="label" htmlFor="scheme-department">Department</label>
+            <label className="label" htmlFor="scheme-department">{t('common.department')}</label>
             <select id="scheme-department" className="input" value={department} onChange={(e) => setDepartment(e.target.value)}>
-              <option value="all">All departments</option>
+              <option value="all">{t('schemes.allDepartments')}</option>
               {departments.map((d) => <option key={d} value={d}>{d}</option>)}
             </select>
           </div>
           <div className="field" style={{ marginBottom: 0 }}>
-            <label className="label" htmlFor="scheme-search">Search schemes</label>
-            <input id="scheme-search" className="input" value={catalogSearch} onChange={(e) => setCatalogSearch(e.target.value)} placeholder="Name, department or benefit" />
+            <label className="label" htmlFor="scheme-search">{t('schemes.searchLabel')}</label>
+            <input id="scheme-search" className="input" value={catalogSearch} onChange={(e) => setCatalogSearch(e.target.value)} placeholder={t('schemes.searchPlaceholder')} />
           </div>
         </div>
 
         <div style={{ marginTop: 18 }}>
-          {catalogBusy ? <div style={{ color: 'var(--muted)', fontSize: 13 }}>Loading scheme catalog…</div> : null}
+          {catalogBusy ? <div style={{ color: 'var(--muted)', fontSize: 13 }}>{t('schemes.catalogLoading')}</div> : null}
           {catalogError ? <div className="tile-warn" role="alert" style={{ padding: 12, borderRadius: 8 }}>{catalogError}</div> : null}
-          {!catalogBusy && !catalogError && visibleSchemes.length === 0 ? <Empty icon="shield" title="No schemes in this section yet." sub="The catalog will grow as more department schemes are verified." /> : null}
+          {!catalogBusy && !catalogError && visibleSchemes.length === 0 ? <Empty icon="shield" title={t('schemes.noCatalog')} sub={t('schemes.catalogWillGrow')} /> : null}
           {!catalogBusy && visibleSchemes.length > 0 && (
             <div className="grid grid-2">
               {visibleSchemes.map((s) => (
                 <article key={s.slug} className="card" style={{ padding: 18, boxShadow: 'none' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'flex-start' }}>
-                    <h4 style={{ margin: 0, fontSize: 15 }}>{s.name}</h4>
-                    <span className="badge badge-cyan">{s.scope === 'manipur_state' ? 'Manipur' : 'Other schemes'}</span>
+                    <button type="button" onClick={() => setSelectedScheme(s)} aria-label={`${t('aiInfo.moreInfo')}: ${s.name}`}
+                      style={{ border: 0, padding: 0, background: 'none', color: 'var(--ink)', font: 'inherit', fontWeight: 700, textAlign: 'left', cursor: 'pointer' }}>
+                      {s.name}
+                    </button>
+                    <span className="badge badge-cyan">{s.scope === 'manipur_state' ? t('schemes.manipur') : t('schemes.other')}</span>
                   </div>
                   <div style={{ display: 'flex', gap: 7, margin: '8px 0', flexWrap: 'wrap' }}>
                     <span className="badge">{s.dept_name || s.department}</span>
                     {s.data_status === 'legacy_demo' ? <DemoChip /> : null}
-                    {s.application_status === 'check_with_department' ? <span className="badge" title="Current application window is not confirmed">Check with department</span> : null}
+                    {s.application_status === 'check_with_department' ? <span className="badge" title={t('schemes.applicationUnconfirmed')}>{t('schemes.checkDepartment')}</span> : null}
                   </div>
                   <p style={{ fontSize: 13, margin: '8px 0', color: 'var(--muted)' }}>{s.eligibility || s.summary}</p>
                   <p style={{ fontSize: 13, margin: '0 0 10px' }}><b>{t('schemes.benefits')}:</b> {s.benefits}</p>
-                  {s.official_link || s.source_url ? (
-                    <a className="btn btn-outline btn-sm" href={s.official_link || s.source_url} target="_blank" rel="noreferrer">
-                      <Icon name="globe" size={13} /> {s.official_link ? t('contacts.website') : 'View source'}
-                    </a>
-                  ) : null}
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <button type="button" className="btn btn-primary btn-sm" onClick={() => setSelectedScheme(s)}>
+                      <Icon name="sparkle" size={13} /> {t('aiInfo.moreInfo')}
+                    </button>
+                    {s.official_link || s.source_url ? (
+                      <a className="btn btn-outline btn-sm" href={s.official_link || s.source_url} target="_blank" rel="noreferrer">
+                        <Icon name="globe" size={13} /> {s.official_link ? t('contacts.website') : t('common.viewSource')}
+                      </a>
+                    ) : null}
+                  </div>
                 </article>
               ))}
             </div>
@@ -143,8 +153,8 @@ export default function Schemes() {
         </div>
       </section>
 
-      <div className="eyebrow" style={{ margin: '26px 0 10px' }}>Demo matcher · sample eligibility rules</div>
-      <p style={{ color: 'var(--muted)', fontSize: 13, margin: '0 0 12px' }}>The catalog above is source-linked. This prototype matcher uses sample rules and cannot confirm eligibility.</p>
+      <div className="eyebrow" style={{ margin: '26px 0 10px' }}>{t('schemes.matcherEyebrow')}</div>
+      <p style={{ color: 'var(--muted)', fontSize: 13, margin: '0 0 12px' }}>{t('schemes.matcherDisclaimer')}</p>
 
       <form className="card" style={{ padding: 26 }} onSubmit={find}>
         <div className="grid grid-2">
@@ -198,7 +208,10 @@ export default function Schemes() {
               {results.results.map((s) => (
                 <div key={s.slug} className="card card-hover" style={{ padding: 22 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'flex-start' }}>
-                    <h4 style={{ margin: 0, fontSize: 16 }}>{s.name}</h4>
+                    <button type="button" onClick={() => setSelectedScheme(s)} aria-label={`${t('aiInfo.moreInfo')}: ${s.name}`}
+                      style={{ border: 0, padding: 0, background: 'none', color: 'var(--ink)', font: 'inherit', fontWeight: 700, textAlign: 'left', cursor: 'pointer' }}>
+                      {s.name}
+                    </button>
                     {authMode !== 'supabase' && <button className="btn btn-ghost btn-sm" onClick={() => toggleSave(s.slug)} aria-label={t('common.save')} style={{ padding: 4 }}>
                       <Icon name="bookmark" size={16} style={{ color: savedSlugs.has(s.slug) ? 'var(--blue-600)' : 'var(--muted)' }} />
                     </button>}
@@ -221,6 +234,9 @@ export default function Schemes() {
                   <p style={{ margin: '0 0 14px', fontSize: 13.5, color: 'var(--muted)' }}><b>{t('schemes.documents')}:</b> {s.documents.join(', ')}</p>
 
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <button type="button" className="btn btn-outline btn-sm" onClick={() => setSelectedScheme(s)}>
+                      <Icon name="sparkle" size={13} /> {t('aiInfo.moreInfo')}
+                    </button>
                     {s.official_link && (
                       <a className="btn btn-outline btn-sm" href={s.official_link} target="_blank" rel="noreferrer">
                         <Icon name="globe" size={13} /> {t('contacts.website')}
@@ -250,6 +266,20 @@ export default function Schemes() {
             </>
           )}
         </div>
+      )}
+      {selectedScheme && (
+        <AiInfoModal type="scheme" slug={selectedScheme.slug} title={selectedScheme.name}
+          sourceUrl={selectedScheme.official_link || selectedScheme.source_url} onClose={() => setSelectedScheme(null)}>
+          <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap', marginBottom: 12 }}>
+            <span className="badge badge-cyan">{selectedScheme.scope === 'manipur_state' ? t('schemes.manipur') : t('schemes.other')}</span>
+            {(selectedScheme.dept_name || selectedScheme.department) ? <span className="badge">{selectedScheme.dept_name || selectedScheme.department}</span> : null}
+            {selectedScheme.is_demo || selectedScheme.data_status === 'legacy_demo' ? <DemoChip /> : null}
+          </div>
+          {(selectedScheme.eligibility || selectedScheme.summary) ? <p><b>{t('schemes.eligibility')}:</b> {selectedScheme.eligibility || selectedScheme.summary}</p> : null}
+          {selectedScheme.benefits ? <p><b>{t('schemes.benefits')}:</b> {selectedScheme.benefits}</p> : null}
+          {Array.isArray(selectedScheme.documents) && selectedScheme.documents.length > 0 ? <p><b>{t('schemes.documents')}:</b> {selectedScheme.documents.map((doc) => typeof doc === 'string' ? doc : doc.item || doc.name).join(', ')}</p> : null}
+          {selectedScheme.process || selectedScheme.application_process?.length ? <p><b>{t('schemes.process')}:</b> {selectedScheme.process || selectedScheme.application_process.join(' ')}</p> : null}
+        </AiInfoModal>
       )}
     </div>
   );

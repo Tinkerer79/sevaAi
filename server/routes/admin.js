@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { requireAdmin } from '../middleware/auth.js';
-import { keyManager, testKey } from '../ai/gemini.js';
+import { keyManager, testKey, generate, AiBusyError, AiRequestError } from '../ai/gemini.js';
 import { config } from '../config.js';
 import { STATUSES, PRIORITIES } from './complaints.js';
 import { q } from '../db.js';
@@ -46,6 +46,32 @@ router.get('/complaints', (req, res) => {
   sql += ' ORDER BY c.created_at DESC LIMIT 200';
   const rows = q.all(sql, ...params).map(({ description, ...r }) => ({ ...r, description: description.slice(0, 120) }));
   res.json({ complaints: rows, statuses: STATUSES, priorities: PRIORITIES });
+});
+
+router.post('/complaints/summary', async (req, res) => {
+  const language = { en: 'English', hi: 'Hindi', mni: 'Meiteilon (Manipuri), written in Bengali script' }[req.body?.language] || 'English';
+  const rows = q.all(
+    `SELECT c.complaint_id, c.category, c.description, c.location, c.district,
+            d.name AS dept_name, c.status, c.priority, c.created_at
+     FROM complaints c LEFT JOIN departments d ON d.id = c.department_id
+     ORDER BY c.created_at DESC LIMIT 500`
+  );
+  if (!rows.length) return res.json({ summary: 'No complaints have been submitted yet.', count: 0 });
+
+  try {
+    const systemInstruction = `You summarize civic complaint records for an administrator of the SevaManipur prototype. Write in ${language}. Summarize only patterns supported by the supplied records: total complaints, common issues and districts, current status and urgent priorities. Give practical triage suggestions without claiming a department has acted unless the status says so. Do not include personal names or phone numbers and do not invent causes or facts. Keep the summary under 220 words with concise headings and bullets.`;
+    const result = await generate({
+      systemInstruction,
+      contents: [{ role: 'user', parts: [{ text: `Summarize every complaint in this data set (${rows.length} records):\n${JSON.stringify(rows)}` }] }],
+      maxOutputTokens: 700,
+    });
+    return res.json({ summary: result.text, count: rows.length });
+  } catch (error) {
+    if (error instanceof AiBusyError) return res.status(503).json({ error: 'Seva AI is temporarily busy. Please try again shortly.' });
+    if (error instanceof AiRequestError) return res.status(400).json({ error: 'Seva AI could not summarize the complaint data.' });
+    console.error('[admin complaint summary]', error);
+    return res.status(500).json({ error: 'Could not summarize complaints.' });
+  }
 });
 
 router.get('/complaints/:id', (req, res) => {

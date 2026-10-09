@@ -41,7 +41,7 @@ export default function Track() {
     <div className="page container" style={{ paddingTop: 34, maxWidth: 760 }}>
       <div className="section-head">
         <div>
-          <div className="eyebrow">Complaint Status</div>
+          <div className="eyebrow">{t('track.eyebrow')}</div>
           <h2>{t('track.title')}</h2>
           <p>{t('track.sub')}</p>
         </div>
@@ -50,7 +50,7 @@ export default function Track() {
       <form className="card" style={{ padding: 22, display: 'flex', gap: 10, flexWrap: 'wrap' }}
         onSubmit={(e) => { e.preventDefault(); track(); }}>
         <input className="input" style={{ flex: 1, minWidth: 200, fontSize: 16, letterSpacing: '0.04em', textTransform: 'uppercase' }}
-          value={input} onChange={(e) => setInput(e.target.value)} placeholder="SM-2026-XXXXX" aria-label={t('track.id')} />
+          value={input} onChange={(e) => setInput(e.target.value)} placeholder={t('track.placeholder')} aria-label={t('track.id')} />
         <button className="btn btn-primary" type="submit" disabled={busy}>
           <Icon name="search" size={16} /> {busy ? t('common.loading') : t('track.button')}
         </button>

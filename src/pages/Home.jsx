@@ -71,7 +71,7 @@ export default function Home() {
           <div className="hero-grid">
             <div className="hero-copy">
               <div className="hero-eyebrow">{t('home.eyebrow')}</div>
-              <h1>Government services, <span className="accent">made easier.</span></h1>
+              <h1>{t('hero.title')}</h1>
               <p className="hero-tag">Seva Manipur — {t('home.tagline')}</p>
               <p className="sub">{t('home.heroSub')}</p>
 

@@ -10,7 +10,7 @@ const SUGGESTED = ['sq.1', 'sq.2', 'sq.3', 'sq.4'];
 
 export default function Assistant() {
   const { t, lang } = useLang();
-  const { user } = useAuth();
+  const { user, authClient } = useAuth();
   const toast = useToast();
   const location = useLocation();
   const [params, setParams] = useSearchParams();
@@ -26,6 +26,14 @@ export default function Assistant() {
   const lastSent = useRef('');
   const autoSent = useRef(false);
 
+  const authorizedApi = useCallback(async (path, options = {}) => {
+    const session = authClient ? (await authClient.auth.getSession()).data?.session : null;
+    const headers = session?.access_token
+      ? { ...options.headers, Authorization: `Bearer ${session.access_token}` }
+      : options.headers;
+    return api(path, { ...options, headers });
+  }, [authClient]);
+
   const speechSupported = typeof window !== 'undefined' && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window);
 
   const scrollDown = () => requestAnimationFrame(() => {
@@ -34,9 +42,9 @@ export default function Assistant() {
   });
 
   const loadConversations = useCallback(() => {
-    if (user) api('/api/ai/conversations').then((d) => setConversations(d.conversations)).catch(() => {});
+    if (user) authorizedApi('/api/ai/conversations').then((d) => setConversations(d.conversations)).catch(() => {});
     else setConversations([]);
-  }, [user]);
+  }, [user, authorizedApi]);
 
   useEffect(loadConversations, [loadConversations]);
 
@@ -49,8 +57,9 @@ export default function Assistant() {
     setMessages((m) => [...m, { role: 'user', text: message, id: Date.now() }, { role: 'ai', text: '', typing: true, id: Date.now() + 1 }]);
     scrollDown();
     try {
-      const d = await api('/api/ai/chat', { method: 'POST', body: { message, language: lang, conversationId: convId } });
+      const d = await authorizedApi('/api/ai/chat', { method: 'POST', body: { message, language: lang, conversationId: convId } });
       if (d.conversationId) setConvId(d.conversationId);
+      if (d.historyUnavailable) toast(t('assistant.historyUnavailable'), 'error');
       setMessages((m) => m.map((x) => (x.typing ? { role: 'ai', text: d.reply, servedBy: d.servedBy, id: x.id } : x)));
       if (user) loadConversations();
     } catch (err) {
@@ -60,7 +69,7 @@ export default function Assistant() {
       setBusy(false);
       scrollDown();
     }
-  }, [input, busy, lang, convId, user, t]);
+  }, [input, busy, lang, convId, user, authorizedApi, toast, t]);
 
   // Auto-send prefill from hero search / Ask AI buttons (once)
   useEffect(() => {
@@ -82,7 +91,7 @@ export default function Assistant() {
 
   const openConversation = async (id) => {
     try {
-      const d = await api(`/api/ai/conversations/${id}`);
+      const d = await authorizedApi(`/api/ai/conversations/${id}`);
       setConvId(d.conversation.id);
       setMessages(d.messages.map((m, i) => ({ role: m.role === 'model' ? 'ai' : 'user', text: m.content, id: i })));
       scrollDown();
@@ -91,7 +100,7 @@ export default function Assistant() {
 
   const deleteConversation = async (e, id) => {
     e.stopPropagation();
-    await api(`/api/ai/conversations/${id}`, { method: 'DELETE' }).catch(() => {});
+    await authorizedApi(`/api/ai/conversations/${id}`, { method: 'DELETE' }).catch(() => {});
     if (convId === id) clearChat();
     loadConversations();
   };
@@ -115,7 +124,7 @@ export default function Assistant() {
     <div className="page container" style={{ paddingTop: 28 }}>
       <div className="section-head" style={{ marginBottom: 16 }}>
         <div>
-          <div className="eyebrow">SevaManipur · Assistant</div>
+          <div className="eyebrow">{t('assistant.eyebrow')}</div>
           <h2>{t('assistant.title')}</h2>
           <p>{t('assistant.sub')}</p>
         </div>
@@ -148,7 +157,7 @@ export default function Assistant() {
                       style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 10px', borderRadius: 9, cursor: 'pointer', background: convId === c.id ? 'var(--blue-50)' : 'transparent' }}>
                       <Icon name="chat" size={14} style={{ flexShrink: 0, color: 'var(--muted)' }} />
                       <span style={{ flex: 1, fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.title}</span>
-                      <button onClick={(e) => deleteConversation(e, c.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', padding: 3 }} aria-label="Delete">
+                      <button onClick={(e) => deleteConversation(e, c.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', padding: 3 }} aria-label={t('common.delete')}>
                         <Icon name="trash" size={13} />
                       </button>
                     </div>
@@ -165,10 +174,10 @@ export default function Assistant() {
         </aside>
 
         <div className="card chat-main">
-          <div className="chat-scroll" ref={scrollRef}>
+          <div className="chat-scroll" ref={scrollRef} role="log" aria-live="polite" aria-relevant="additions text" aria-label={t('assistant.title')}>
             {messages.length === 0 && (
               <div className="empty" style={{ margin: 'auto' }}>
-                <div className="big"><Icon name="chat" size={40} style={{ opacity: 0.5 }} /></div>
+                <div className="big assistant-empty-mark"><Icon name="chat" size={40} style={{ opacity: 0.5 }} /></div>
                 <h3>{t('assistant.title')}</h3>
                 <p style={{ maxWidth: 380, margin: '6px auto 0' }}>{t('assistant.sub')}</p>
               </div>

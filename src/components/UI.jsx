@@ -101,16 +101,18 @@ export const Empty = ({ icon = 'search', title, sub }) => (
 export const Skeleton = ({ h = 90, style }) => <div className="skeleton" style={{ height: h, ...style }} />;
 
 export const StatusBadge = ({ status }) => {
+  const { t } = useLang();
   const map = {
     Submitted: 'badge-grey', Received: 'badge-blue', Assigned: 'badge-cyan',
     'Under Review': 'badge-amber', Resolved: 'badge-green',
   };
-  return <span className={`badge ${map[status] || 'badge-grey'}`}>{status}</span>;
+  return <span className={`badge ${map[status] || 'badge-grey'}`}>{t(`st.${status}`)}</span>;
 };
 
 export const PriorityBadge = ({ priority }) => {
+  const { t } = useLang();
   const map = { Low: 'badge-grey', Medium: 'badge-blue', High: 'badge-amber', Critical: 'badge-red' };
-  return <span className={`badge ${map[priority] || 'badge-grey'}`}>{priority}</span>;
+  return <span className={`badge ${map[priority] || 'badge-grey'}`}>{t(`pr.${priority}`)}</span>;
 };
 
 export function copyText(text) {

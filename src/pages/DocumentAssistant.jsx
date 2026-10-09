@@ -4,6 +4,13 @@ import { api } from '../api.js';
 import { useLang } from '../i18n.jsx';
 import { Icon, Empty, DemoChip } from '../components/UI.jsx';
 
+const CATEGORY_TRANSLATION_KEYS = {
+  Certificates: 'category.certificates', Education: 'category.education', Health: 'category.health',
+  Agriculture: 'category.agriculture', Transport: 'category.transport', Employment: 'category.employment',
+  Business: 'category.business', 'Social Welfare': 'category.socialWelfare',
+  'Land & Revenue': 'category.landRevenue', 'Civic Services': 'category.civicServices',
+};
+
 export default function DocumentAssistant() {
   const { t } = useLang();
   const navigate = useNavigate();
@@ -38,7 +45,7 @@ export default function DocumentAssistant() {
     <div className="page container" style={{ paddingTop: 34, maxWidth: 1020 }}>
       <div className="section-head">
         <div>
-          <div className="eyebrow">Step-by-step · Demo Data</div>
+          <div className="eyebrow">{t('docs.eyebrow')} · {t('common.demo')}</div>
           <h2>{t('docs.title')}</h2>
           <p>{t('docs.sub')}</p>
         </div>
@@ -55,7 +62,7 @@ export default function DocumentAssistant() {
               <button key={s.slug} onClick={() => setSlug(s.slug)}
                 style={{ textAlign: 'left', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--border)', background: slug === s.slug ? 'var(--blue-50)' : '#fff', cursor: 'pointer', fontSize: 13.5, display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'center' }}>
                 <span>{s.name}</span>
-                <span className="badge badge-grey" style={{ fontSize: 11 }}>{s.category}</span>
+                <span className="badge badge-grey" style={{ fontSize: 11 }}>{t(CATEGORY_TRANSLATION_KEYS[s.category] || s.category)}</span>
               </button>
             ))}
           </div>

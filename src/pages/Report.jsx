@@ -32,10 +32,10 @@ export default function Report() {
 
   const validate = () => {
     const e = {};
-    if (form.description.trim().length < 10) e.description = 'Please describe the problem (at least 10 characters).';
-    if (form.location.trim().length < 3) e.location = 'Please enter the location.';
-    if (form.name.trim().length < 2) e.name = 'Please enter your name.';
-    if (!/^[6-9]\d{9}$/.test(form.phone.replace(/\D/g, '').slice(-10))) e.phone = 'Enter a valid 10-digit mobile number.';
+    if (form.description.trim().length < 10) e.description = t('report.errorDescription');
+    if (form.location.trim().length < 3) e.location = t('report.errorLocation');
+    if (form.name.trim().length < 2) e.name = t('report.errorName');
+    if (!/^[6-9]\d{9}$/.test(form.phone.replace(/\D/g, '').slice(-10))) e.phone = t('report.errorPhone');
     setErrors(e);
     return !Object.keys(e).length;
   };
@@ -62,7 +62,7 @@ export default function Report() {
   const onPhoto = (e) => {
     const f = e.target.files?.[0];
     if (!f) return;
-    if (f.size > 5 * 1024 * 1024) { toast('Image must be under 5 MB', 'error'); return; }
+    if (f.size > 5 * 1024 * 1024) { toast(t('report.imageTooLarge'), 'error'); return; }
     setPhoto(f);
     setPreview(URL.createObjectURL(f));
   };
@@ -102,7 +102,7 @@ export default function Report() {
     <div className="page container" style={{ paddingTop: 34, maxWidth: 760 }}>
       <div className="section-head">
         <div>
-          <div className="eyebrow">Civic Grievance</div>
+          <div className="eyebrow">{t('report.eyebrow')}</div>
           <h2>{t('report.title')}</h2>
           <p>{t('report.sub')}</p>
         </div>
@@ -130,7 +130,7 @@ export default function Report() {
         <div className="grid grid-2">
           <div className="field">
             <label className="label" htmlFor="loc">{t('common.location')}</label>
-            <input id="loc" className="input" maxLength={200} value={form.location} onChange={(e) => set('location', e.target.value)} placeholder="Street / ward / landmark" />
+            <input id="loc" className="input" maxLength={200} value={form.location} onChange={(e) => set('location', e.target.value)} placeholder={t('report.locationPlaceholder')} />
             {errors.location && <div className="err">{errors.location}</div>}
           </div>
           <div className="field">
@@ -145,7 +145,7 @@ export default function Report() {
           <label className="label" htmlFor="photo">{t('report.photo')}</label>
           <div style={{ display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap' }}>
             <label className="btn btn-outline" style={{ cursor: 'pointer' }}>
-              <Icon name="camera" size={16} /> Choose image
+              <Icon name="camera" size={16} /> {t('report.chooseImage')}
               <input type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={onPhoto} />
             </label>
             {preview && (
@@ -157,7 +157,7 @@ export default function Report() {
                 </button>
               </div>
             )}
-            <span style={{ fontSize: 12.5, color: 'var(--muted)' }}>JPG / PNG / WebP · max 5 MB</span>
+            <span style={{ fontSize: 12.5, color: 'var(--muted)' }}>{t('report.imageHint')}</span>
           </div>
         </div>
 
@@ -169,7 +169,7 @@ export default function Report() {
           </div>
           <div className="field">
             <label className="label" htmlFor="ph">{t('common.phone')}</label>
-            <input id="ph" className="input" inputMode="numeric" maxLength={14} value={form.phone} onChange={(e) => set('phone', e.target.value)} placeholder="10-digit mobile" />
+            <input id="ph" className="input" inputMode="numeric" maxLength={14} value={form.phone} onChange={(e) => set('phone', e.target.value)} placeholder={t('report.phonePlaceholder')} />
             {errors.phone && <div className="err">{errors.phone}</div>}
           </div>
         </div>
@@ -178,7 +178,7 @@ export default function Report() {
           <Icon name="send" size={17} /> {busy ? t('common.loading') : t('report.submit')}
         </button>
         <p style={{ fontSize: 12.5, color: 'var(--muted)', margin: '12px 0 0', textAlign: 'center' }}>
-          <Icon name="info" size={13} style={{ verticalAlign: '-2px' }} /> Prototype: complaints are stored in the demo database and routed to the matching department.
+          <Icon name="info" size={13} style={{ verticalAlign: '-2px' }} /> {t('report.disclaimer')}
         </p>
       </form>
     </div>

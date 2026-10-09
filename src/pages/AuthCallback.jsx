@@ -1,10 +1,12 @@
 import { useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth.jsx';
+import { useLang } from '../i18n.jsx';
 import { Icon } from '../components/UI.jsx';
 
 export default function AuthCallback() {
   const { user, ready, authMode } = useAuth();
+  const { t } = useLang();
   const location = useLocation();
   const navigate = useNavigate();
   const hash = new URLSearchParams(location.hash.replace(/^#/, ''));
@@ -20,13 +22,13 @@ export default function AuthCallback() {
       <div className="card" style={{ maxWidth: 480, margin: '0 auto', padding: 28 }}>
         {failed ? <>
           <Icon name="alert" size={24} style={{ color: 'var(--red-600)' }} />
-          <h2 style={{ marginTop: 12 }}>Sign-in did not complete</h2>
-          <p style={{ color: 'var(--muted)' }}>{error || 'Please check the provider setup and try again.'}</p>
-          <Link className="btn btn-primary" to="/login">Back to sign in</Link>
+          <h2 style={{ marginTop: 12 }}>{t('auth.callbackFailed')}</h2>
+          <p style={{ color: 'var(--muted)' }}>{error || t('auth.callbackHelp')}</p>
+          <Link className="btn btn-primary" to="/login">{t('auth.backToSignIn')}</Link>
         </> : <>
           <div className="skeleton" style={{ height: 6, width: '42%', margin: '0 auto 18px' }} />
-          <h2>Finishing sign-in…</h2>
-          <p style={{ color: 'var(--muted)' }}>You’ll be redirected when your account is ready.</p>
+          <h2>{t('auth.finishingSignIn')}</h2>
+          <p style={{ color: 'var(--muted)' }}>{t('auth.redirectWhenReady')}</p>
         </>}
       </div>
     </div>
