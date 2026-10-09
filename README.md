@@ -29,6 +29,12 @@ npm run dev          # frontend on :5173 (proxies /api to :8787)
 
 Re-seed the demo database from scratch: `npm run seed`
 
+For a local Express backend, an additional admin can be provisioned with the
+server-only `SEED_ADMIN_EMAIL` and `SEED_ADMIN_PASSWORD` environment variables.
+The configured account is created or updated when the backend starts. These
+variables do not provision users in the Vercel/Supabase deployment; Supabase
+admins must be assigned server-managed `app_metadata.role=admin`.
+
 **Demo logins**
 
 | Role    | Email                 | Password   |

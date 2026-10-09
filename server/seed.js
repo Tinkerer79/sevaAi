@@ -87,6 +87,24 @@ function seedComplaints(deptMap) {
 }
 
 export function seedIfEmpty() {
+  // Optional operator-provided local admin. Keep credentials in the runtime
+  // environment instead of committing them to the demo seed.
+  const adminEmail = String(process.env.SEED_ADMIN_EMAIL || '').trim().toLowerCase();
+  const adminPassword = String(process.env.SEED_ADMIN_PASSWORD || '');
+  if (adminEmail && adminPassword) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(adminEmail)) {
+      throw new Error('SEED_ADMIN_EMAIL must be a valid email address.');
+    }
+    if (adminPassword.length < 6) {
+      throw new Error('SEED_ADMIN_PASSWORD must contain at least 6 characters.');
+    }
+    q.run(
+      `INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, 'admin')
+       ON CONFLICT(email) DO UPDATE SET password_hash = excluded.password_hash, role = 'admin'`,
+      adminEmail.split('@')[0], adminEmail, bcrypt.hashSync(adminPassword, 10),
+    );
+  }
+
   const hasData = q.get('SELECT COUNT(*) AS n FROM services').n > 0;
   if (hasData) return false;
 

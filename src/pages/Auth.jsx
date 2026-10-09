@@ -18,7 +18,7 @@ function AuthShell({ title, sub, children, alt }) {
           <p style={{ color: 'var(--muted)', margin: 0, fontSize: 14 }}>{sub}</p>
         </div>
         {children}
-        <div style={{ marginTop: 18, textAlign: 'center', fontSize: 14 }}>{alt}</div>
+        {alt && <div style={{ marginTop: 18, textAlign: 'center', fontSize: 14 }}>{alt}</div>}
         <div style={{ marginTop: 16, textAlign: 'center' }}>
           <Link to={title === t('auth.adminTitle') ? '/login' : '/admin/login'} style={{ fontSize: 13 }}>
             {title === t('auth.adminTitle') ? t('auth.citizenLink') : t('auth.adminLink')} →
@@ -196,7 +196,7 @@ export function AdminLoginPage() {
   };
 
   return (
-    <AuthShell title={t('auth.adminTitle')} sub={t('auth.adminSub')} alt={<Link to="/login">{t('auth.citizenLink')} →</Link>}>
+    <AuthShell title={t('auth.adminTitle')} sub={t('auth.adminSub')}>
       <form onSubmit={submit}>
         <div className="field">
           <label className="label" htmlFor="aem">{t('common.email')}</label>
