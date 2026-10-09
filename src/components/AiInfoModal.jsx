@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { api } from '../api.js';
 import { useLang } from '../i18n.jsx';
 import { Icon, Spinner } from './UI.jsx';
@@ -28,10 +29,9 @@ export default function AiInfoModal({ type, slug, title, sourceUrl, children, on
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [onClose]);
 
-  return (
+  return createPortal((
     <div className="overlay modal-center" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
-      <section className="modal" role="dialog" aria-modal="true" aria-labelledby="ai-info-title"
-        style={{ width: 'min(680px, calc(100% - 32px))', maxHeight: 'min(88dvh, 780px)', overflowY: 'auto' }}>
+      <section className="modal ai-info-modal" role="dialog" aria-modal="true" aria-labelledby="ai-info-title">
         <header className="drawer-head">
           <div>
             <div className="eyebrow">{t('aiInfo.eyebrow')}</div>
@@ -52,5 +52,5 @@ export default function AiInfoModal({ type, slug, title, sourceUrl, children, on
         </div>
       </section>
     </div>
-  );
+  ), document.body);
 }

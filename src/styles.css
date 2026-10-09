@@ -438,7 +438,9 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; background:
 }
 .drawer-body { padding: 22px; }
 .modal-center { align-items: center; justify-content: center; }
+.overlay.modal-center { min-height: 100vh; min-height: 100dvh; padding: 16px; overflow-y: auto; box-sizing: border-box; }
 .modal { width: min(480px, calc(100% - 40px)); background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); animation: pageIn 0.2s ease; overflow: hidden; }
+.ai-info-modal { width: min(680px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow-y: auto; overscroll-behavior: contain; }
 
 /* ── Admin ───────────────────────────────────────────────────────────────── */
 .stat-cards { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
