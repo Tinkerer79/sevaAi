@@ -17,7 +17,7 @@ export function BrandMark({ size = 32 }) {
 
 export default function Navbar() {
   const { t, lang, setLang, languages } = useLang();
-  const { user, logout } = useAuth();
+  const { user, logout, authMode } = useAuth();
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -68,10 +68,10 @@ export default function Navbar() {
 
             {user ? (
               <>
-                <Link to="/dashboard" className="btn btn-outline btn-sm nav-desktop-only">
+                {authMode !== 'supabase' && <Link to="/dashboard" className="btn btn-outline btn-sm nav-desktop-only">
                   <Icon name="user" size={14} /> {t('nav.dashboard')}
-                </Link>
-                {user.role === 'admin' && (
+                </Link>}
+                {authMode !== 'supabase' && user.role === 'admin' && (
                   <Link to="/admin" className="btn btn-primary btn-sm nav-desktop-only">
                     <Icon name="settings" size={14} /> {t('nav.admin')}
                   </Link>
@@ -109,8 +109,8 @@ export default function Navbar() {
             </select>
             {user ? (
               <>
-                <Link to="/dashboard" className="btn btn-outline btn-sm" onClick={() => setOpen(false)}>{t('nav.dashboard')}</Link>
-                {user.role === 'admin' && <Link to="/admin" className="btn btn-primary btn-sm" onClick={() => setOpen(false)}>{t('nav.admin')}</Link>}
+                {authMode !== 'supabase' && <Link to="/dashboard" className="btn btn-outline btn-sm" onClick={() => setOpen(false)}>{t('nav.dashboard')}</Link>}
+                {authMode !== 'supabase' && user.role === 'admin' && <Link to="/admin" className="btn btn-primary btn-sm" onClick={() => setOpen(false)}>{t('nav.admin')}</Link>}
                 <button className="btn btn-ghost btn-sm" onClick={doLogout}>{t('nav.logout')}</button>
               </>
             ) : (

@@ -113,7 +113,7 @@ export function ServicesPage() {
 export function ServiceDetailPage() {
   const { slug } = useParams();
   const { t } = useLang();
-  const { user } = useAuth();
+  const { user, authMode } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
   const [service, setService] = useState(null);
@@ -160,9 +160,9 @@ export function ServiceDetailPage() {
             </p>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button className="btn btn-outline btn-sm" onClick={toggleSave}>
+            {authMode !== 'supabase' && <button className="btn btn-outline btn-sm" onClick={toggleSave}>
               <Icon name="bookmark" size={14} /> {saved ? t('common.saved') : t('common.save')}
-            </button>
+            </button>}
             <button className="btn btn-primary btn-sm"
               onClick={() => navigate(`/assistant?q=${encodeURIComponent(`Explain how to apply for: ${service.name}. What documents do I need and where do I apply?`)}`)}>
               <Icon name="chat" size={14} /> {t('common.askAI')}

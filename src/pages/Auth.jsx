@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLang } from '../i18n.jsx';
 import { useAuth } from '../auth.jsx';
@@ -38,28 +38,63 @@ function DemoHint({ cred }) {
   );
 }
 
+function SocialLoginButtons({ onSignIn, disabled }) {
+  return (
+    <div style={{ display: 'grid', gap: 9, margin: '18px 0' }}>
+      <button type="button" className="btn btn-outline btn-lg" disabled={disabled} onClick={() => onSignIn('google')}>
+        <b aria-hidden="true" style={{ fontSize: 16, marginRight: 7 }}>G</b> Continue with Google
+      </button>
+      <button type="button" className="btn btn-outline btn-lg" disabled={disabled} onClick={() => onSignIn('github')}>
+        <b aria-hidden="true" style={{ fontSize: 14, marginRight: 7 }}>●</b> Continue with GitHub
+      </button>
+    </div>
+  );
+}
+
+function AuthDivider() {
+  return <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--muted)', fontSize: 12, margin: '16px 0' }}><span style={{ height: 1, background: 'var(--border)', flex: 1 }} />OR WITH EMAIL<span style={{ height: 1, background: 'var(--border)', flex: 1 }} /></div>;
+}
+
+function runProviderSignIn(signInWithProvider, provider, setBusy, setErr) {
+  setBusy(true); setErr('');
+  signInWithProvider(provider).catch((error) => {
+    setErr(error.message || 'Could not start sign-in.');
+    setBusy(false);
+  });
+}
+
 export function LoginPage() {
   const { t } = useLang();
-  const { login } = useAuth();
+  const { login, authMode, ready, user, signInWithProvider } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
 
+  useEffect(() => {
+    if (user) navigate(user.role === 'admin' ? '/admin' : (authMode === 'supabase' ? '/schemes' : '/dashboard'), { replace: true });
+  }, [user, authMode, navigate]);
+
   const submit = async (e) => {
     e.preventDefault();
     setBusy(true); setErr('');
     try {
       const u = await login(email, password);
-      navigate(u.role === 'admin' ? '/admin' : '/dashboard');
+      navigate(u.role === 'admin' ? '/admin' : (authMode === 'supabase' ? '/schemes' : '/dashboard'));
     } catch (error) { setErr(error.message); }
     setBusy(false);
   };
 
+  const socialSignIn = (provider) => runProviderSignIn(signInWithProvider, provider, setBusy, setErr);
+
   return (
     <AuthShell title={t('auth.loginTitle')} sub={t('auth.loginSub')}
       alt={<span>{t('auth.noAccount')} <Link to="/register">{t('auth.registerTitle').split(' ').slice(0, 3).join(' ')}</Link></span>}>
+      {authMode === 'supabase' && <>
+        <SocialLoginButtons onSignIn={socialSignIn} disabled={!ready || busy} />
+        <AuthDivider />
+      </>}
       <form onSubmit={submit}>
         <div className="field">
           <label className="label" htmlFor="em">{t('common.email')}</label>
@@ -70,35 +105,43 @@ export function LoginPage() {
           <input id="pw" className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" />
         </div>
         {err && <div className="err" style={{ marginBottom: 10 }}><Icon name="alert" size={13} style={{ verticalAlign: '-2px' }} /> {err}</div>}
-        <button className="btn btn-primary btn-lg" style={{ width: '100%' }} disabled={busy}>{busy ? t('common.loading') : t('nav.login')}</button>
+        <button className="btn btn-primary btn-lg" style={{ width: '100%' }} disabled={busy || !ready}>{busy ? t('common.loading') : t('nav.login')}</button>
       </form>
-      <DemoHint cred="demo@citizen.in · Demo@2026" />
+      {authMode === 'legacy' && <DemoHint cred="demo@citizen.in · Demo@2026" />}
     </AuthShell>
   );
 }
 
 export function RegisterPage() {
   const { t } = useLang();
-  const { register } = useAuth();
+  const { register, authMode, ready, signInWithProvider } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({ name: '', email: '', phone: '', password: '' });
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState('');
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
   const submit = async (e) => {
     e.preventDefault();
     setBusy(true); setErr('');
     try {
-      await register(form);
-      navigate('/dashboard');
+      const result = await register(form);
+      if (result.needsEmailConfirmation) setNotice('Account created. Check your email to confirm it, then sign in.');
+      else navigate(authMode === 'supabase' ? '/schemes' : '/dashboard');
     } catch (error) { setErr(error.message); }
     setBusy(false);
   };
 
+  const socialSignIn = (provider) => runProviderSignIn(signInWithProvider, provider, setBusy, setErr);
+
   return (
     <AuthShell title={t('auth.registerTitle')} sub={t('auth.registerSub')}
       alt={<span>{t('auth.haveAccount')} <Link to="/login">{t('nav.login')}</Link></span>}>
+      {authMode === 'supabase' && <>
+        <SocialLoginButtons onSignIn={socialSignIn} disabled={!ready || busy} />
+        <AuthDivider />
+      </>}
       <form onSubmit={submit}>
         <div className="field">
           <label className="label" htmlFor="nm">{t('common.name')}</label>
@@ -117,8 +160,9 @@ export function RegisterPage() {
           <input id="pw" className="input" type="password" value={form.password} onChange={(e) => set('password', e.target.value)} required minLength={6} autoComplete="new-password" />
         </div>
         {err && <div className="err" style={{ marginBottom: 10 }}><Icon name="alert" size={13} style={{ verticalAlign: '-2px' }} /> {err}</div>}
-        <button className="btn btn-primary btn-lg" style={{ width: '100%' }} disabled={busy}>{busy ? t('common.loading') : t('auth.registerTitle')}</button>
+        <button className="btn btn-primary btn-lg" style={{ width: '100%' }} disabled={busy || !ready}>{busy ? t('common.loading') : t('auth.registerTitle')}</button>
       </form>
+      {notice && <div className="tile-green" role="status" style={{ marginTop: 14, padding: 12, borderRadius: 8, fontSize: 13 }}>{notice}</div>}
     </AuthShell>
   );
 }

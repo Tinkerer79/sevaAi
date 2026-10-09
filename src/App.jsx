@@ -15,6 +15,7 @@ import Report from './pages/Report.jsx';
 import Track from './pages/Track.jsx';
 import Contacts from './pages/Contacts.jsx';
 import { LoginPage, RegisterPage, AdminLoginPage } from './pages/Auth.jsx';
+import AuthCallback from './pages/AuthCallback.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Admin from './pages/Admin.jsx';
 import { AboutPage, PrivacyPage, TermsPage, AccessibilityPage } from './pages/Info.jsx';
@@ -56,6 +57,7 @@ function Layout() {
           <Route path="/contacts" element={<Contacts />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/admin/login" element={<AdminLoginPage />} />
           <Route path="/dashboard" element={<Protected><Dashboard /></Protected>} />
           <Route path="/admin" element={<Protected admin><Admin /></Protected>} />

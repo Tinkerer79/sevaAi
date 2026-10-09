@@ -9,7 +9,7 @@ const OCCUPATIONS = ['student', 'farmer', 'business', 'salaried', 'unemployed', 
 
 export default function Schemes() {
   const { t } = useLang();
-  const { user } = useAuth();
+  const { user, authMode } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
   const [age, setAge] = useState('');
@@ -199,9 +199,9 @@ export default function Schemes() {
                 <div key={s.slug} className="card card-hover" style={{ padding: 22 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'flex-start' }}>
                     <h4 style={{ margin: 0, fontSize: 16 }}>{s.name}</h4>
-                    <button className="btn btn-ghost btn-sm" onClick={() => toggleSave(s.slug)} aria-label={t('common.save')} style={{ padding: 4 }}>
+                    {authMode !== 'supabase' && <button className="btn btn-ghost btn-sm" onClick={() => toggleSave(s.slug)} aria-label={t('common.save')} style={{ padding: 4 }}>
                       <Icon name="bookmark" size={16} style={{ color: savedSlugs.has(s.slug) ? 'var(--blue-600)' : 'var(--muted)' }} />
-                    </button>
+                    </button>}
                   </div>
                   <div style={{ display: 'flex', gap: 7, margin: '8px 0 10px', flexWrap: 'wrap' }}>
                     <span className="badge badge-cyan">{s.dept_name || 'Government'}</span>

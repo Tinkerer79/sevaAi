@@ -124,8 +124,9 @@ npm run build && npm start   # one server on :8787 serves API + built frontend
 The `api/` directory deploys as Vercel serverless functions and serves **Seva AI chat**
 (`/api/ai/chat`, keys stay server-side, rotation + cooldowns ported from `server/ai/`), the
 read-only **services / schemes / scheme-matcher / contacts / complaint-meta** endpoints,
-`/api/health`, and honest 501 stubs for auth. The scheme catalog reads from Supabase when its
-server-side environment variables are configured; the service directory and other listed data
+`/api/health`, and the public Supabase Auth configuration endpoint. Login, registration and Google /
+GitHub OAuth run through Supabase Auth in the browser. The scheme catalog reads from Supabase when
+its server-side environment variables are configured; the service directory and other listed data
 remain sample data.
 
 1. Import/deploy the repo on Vercel → `vercel.json` picks up `dist` + `api/` automatically.
@@ -136,8 +137,11 @@ remain sample data.
    * `GEMINI_MODEL=gemini-flash-lite-latest`, `AI_ROTATION_STRATEGY=round_robin`
    * `SUPABASE_URL` — project API URL
    * `SUPABASE_ANON_KEY` or `SUPABASE_PUBLISHABLE_KEY` — public read key; do not use a service-role key
-3. Not available in this mode: login/registration (501), complaint submit/track, saves, admin —
-   they need the full backend (option C). Seva AI serves guests, so the assistant works fully.
+   * `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` also enable Supabase Auth. Configure Google and
+     GitHub providers and allowed callback URLs as described in [Supabase OAuth setup](supabase/README.md).
+3. Complaint submit/track, saved items and the admin dashboard still need the full backend
+   (option C). In Vercel mode, citizen sign-in is available for identity, then users return to the
+   scheme finder; save controls are hidden until persistence is connected. Seva AI also serves guests.
 
 **C. Frontend on Vercel + full backend hosted elsewhere (Railway / Render / Fly / a VPS / your machine)**
 

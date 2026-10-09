@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
   "description": "SevaManipur AI — AI-powered citizen gateway for Manipur. Prototype for AI4SEVA Hackathon 2026.",
   "scripts": {
     "dev": "vite",
@@ -12,6 +15,7 @@
     "seed": "node --disable-warning=ExperimentalWarning server/seed.js --force"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.117.3",
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.7",
     "dotenv": "^16.4.5",

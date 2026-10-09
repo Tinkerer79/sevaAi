@@ -13,6 +13,38 @@ This initial seed contains seven Manipur Social Welfare records with official so
 
 The existing app also has a broader 14-scheme sample in `server/demoData.js`. Those rows are not copied into this verified seed: several have old or incomplete details. Review and source each before importing them as live catalog data. Keep any retained sample rows marked `legacy_demo` until reviewed.
 
+## Enable Google and GitHub sign-in
+
+The frontend supports Supabase Auth with Google and GitHub. Provider secrets belong in Supabase, not
+in Vercel environment variables or frontend code.
+
+1. In Google Cloud Console, create an OAuth client for a web application. In GitHub Developer
+   settings, create an OAuth App. For **both** provider apps, set the authorization callback URL to:
+
+   `https://nlhagyvrxhiwzmyzctgi.supabase.co/auth/v1/callback`
+
+2. In Supabase Dashboard → Authentication → Sign In / Providers, enable Google and GitHub and enter
+   each provider's client ID and client secret.
+3. In Supabase Dashboard → Authentication → URL Configuration, set the Site URL to the production
+   Vercel origin and add these Redirect URLs:
+
+   - `https://seva-ai-gold.vercel.app/auth/callback`
+   - `http://localhost:5173/auth/callback`
+
+4. In Vercel Project Settings → Environment Variables, set `SUPABASE_URL` and
+   `SUPABASE_PUBLISHABLE_KEY` (or the legacy public `SUPABASE_ANON_KEY`) for Production and Preview,
+   then redeploy. These are public client configuration values; never use a service-role key here.
+
+The OAuth buttons appear once those Vercel variables are present. Users can sign in with either
+provider or with email/password. Admin rights are only read from Supabase's server-managed
+`app_metadata.role`; public profile metadata cannot grant admin access. The Vercel deployment does
+not yet persist complaints or saved items, so sign-in currently provides identity for the scheme
+finder rather than a full account dashboard.
+
+Provider setup references: [Google](https://supabase.com/docs/guides/auth/social-login/auth-google),
+[GitHub](https://supabase.com/docs/guides/auth/social-login/auth-github), and
+[Supabase redirect URL configuration](https://supabase.com/docs/guides/auth/redirect-urls).
+
 Sources:
 
 - [Manipur Social Welfare Department](https://www.socialwelfare.mn.gov.in/en/)

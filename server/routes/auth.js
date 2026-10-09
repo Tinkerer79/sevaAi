@@ -19,6 +19,12 @@ const cookieOpts = {
   path: '/',
 };
 
+router.get('/config', (_req, res) => {
+  const url = String(process.env.SUPABASE_URL || '').replace(/\/+$/, '');
+  const publishableKey = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY || '';
+  res.set('Cache-Control', 'no-store').json({ enabled: Boolean(url && publishableKey), url, publishableKey });
+});
+
 router.post('/register', (req, res) => {
   const name = clean(req.body.name).slice(0, 80);
   const email = clean(req.body.email).toLowerCase().slice(0, 120);
