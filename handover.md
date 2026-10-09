@@ -12,7 +12,7 @@ Updated: 2026-10-09
 - The revised PowerPoint and PDF were regenerated from `scripts/build_pitch.py`; the PDF contains six slides and rendered cleanly. Removed placeholder team name/number text. Screenshots were left untouched.
 - Added official destinations to all previously unlinked built-in scheme records that had a findable official landing page. Built-in sample schemes remain labelled demo data regardless of whether they link to an official source.
 - `npm run build` completed successfully after the Document Assistant changes; `git diff --check` passed.
-- Current worktree includes uncommitted presentation, scheme-link and Document Assistant changes. Do not overwrite the screenshot or rebuild the presentation from a different image without the user asking.
+- Presentation, scheme-link and Document Assistant changes were committed as `13db878` and pushed to `origin/master`. The worktree should be clean. Do not overwrite the screenshot or rebuild the presentation from a different image without the user asking.
 
 ## User goals in progress
 
