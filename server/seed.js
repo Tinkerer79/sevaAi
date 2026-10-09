@@ -119,7 +119,7 @@ export function seedIfEmpty() {
       s.slug, s.name, deptMap[s.dept] || null, s.benefits, s.eligibility,
       JSON.stringify(s.documents), s.process, s.link || null,
       s.min_age ?? null, s.max_age ?? null, JSON.stringify(s.occupations), s.area, s.max_income ?? null,
-      JSON.stringify(s.keywords), s.link ? 0 : 1
+      JSON.stringify(s.keywords), 1
     );
   }
 

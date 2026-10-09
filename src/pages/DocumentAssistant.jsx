@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../api.js';
 import { useLang } from '../i18n.jsx';
 import { Icon, Empty, DemoChip } from '../components/UI.jsx';
+import AiInfoModal from '../components/AiInfoModal.jsx';
 
 const CATEGORY_TRANSLATION_KEYS = {
   Certificates: 'category.certificates', Education: 'category.education', Health: 'category.health',
@@ -18,6 +19,7 @@ export default function DocumentAssistant() {
   const [slug, setSlug] = useState('');
   const [service, setService] = useState(null);
   const [checked, setChecked] = useState({});
+  const [showAiGuide, setShowAiGuide] = useState(false);
 
   useEffect(() => {
     api('/api/services').then((d) => {
@@ -29,7 +31,7 @@ export default function DocumentAssistant() {
   useEffect(() => {
     if (!slug) return;
     setService(null);
-    api(`/api/services/${slug}`).then((d) => { setService(d.service); setChecked({}); }).catch(() => {});
+    api(`/api/services/${slug}`).then((d) => { setService(d.service); setChecked({}); setShowAiGuide(false); }).catch(() => {});
   }, [slug]);
 
   const missing = service ? service.documents.filter((_, i) => !checked[i]).map((d) => (d.item || d)) : [];
@@ -97,7 +99,15 @@ export default function DocumentAssistant() {
                 ))}
               </ul>
 
-              <button className="btn btn-primary" style={{ marginTop: 16, width: '100%' }} onClick={askMissing}>
+              {service.official_link ? (
+                <a className="btn btn-outline" style={{ marginTop: 16, width: '100%' }} href={service.official_link} target="_blank" rel="noreferrer">
+                  <Icon name="globe" size={16} /> {t('services.link')}
+                </a>
+              ) : null}
+              <button className="btn btn-outline" style={{ marginTop: 16, width: '100%' }} onClick={() => setShowAiGuide(true)}>
+                <Icon name="sparkle" size={16} /> {t('docs.aiGuide')}
+              </button>
+              <button className="btn btn-primary" style={{ marginTop: 9, width: '100%' }} onClick={askMissing}>
                 <Icon name="chat" size={16} /> {t('docs.missing')}
               </button>
             </div>
@@ -116,6 +126,16 @@ export default function DocumentAssistant() {
           </div>
         )}
       </div>
+      {showAiGuide && service ? (
+        <AiInfoModal type="service" slug={service.slug} title={service.name}
+          sourceUrl={service.official_link} onClose={() => setShowAiGuide(false)}>
+          <p>{service.description}</p>
+          <p><b>{t('docs.required')}:</b> {service.documents.map((doc, i) => `${checked[i] ? '✓' : '•'} ${doc.item || doc}`).join(' · ')}</p>
+          {service.steps?.length ? <p><b>{t('docs.steps')}:</b> {service.steps.join(' ')}</p> : null}
+          <div className="badge">{service.dept_name || service.category}</div>
+          {service.is_demo ? <DemoChip /> : null}
+        </AiInfoModal>
+      ) : null}
     </div>
   );
 }

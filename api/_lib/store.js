@@ -7,9 +7,9 @@ import { DEPARTMENTS, SERVICES, SCHEMES, CONTACTS } from '../../server/demoData.
 
 export { DEPARTMENTS, SERVICES, SCHEMES, CONTACTS };
 
-// Same is_demo computation the seeder applies on INSERT.
+// The built-in service and scheme catalogs are sample data, regardless of links.
 const serviceIsDemo = (s) => ((s.link || s.name.includes('Parivahan')) ? 0 : 1);
-const schemeIsDemo = (s) => (s.link ? 0 : 1);
+const schemeIsDemo = () => 1;
 
 export const serviceRows = SERVICES.map((s, i) => ({
   id: i + 1,

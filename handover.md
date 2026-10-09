@@ -2,6 +2,18 @@
 
 Updated: 2026-10-09
 
+## Latest session update — 2026-10-09
+
+- Revised the six-slide SW-01 pitch deck for accuracy and simpler wording. Regenerated both `SevaManipur_AI4SEVA_SW01.pptx` and its PDF from `scripts/build_pitch.py`; confirmed the PDF has six slides and checked the rendered pages for layout issues.
+- The deck now says the Vercel app uses Supabase for the scheme catalog and signed-in data. It distinguishes the seven source-linked Social Welfare records, which still need department confirmation, from the sample records. It describes the matcher as a basic prototype using age, work, area and income.
+- **No screenshots or image assets were edited.** The deck build continues to use the existing `gui-test-screenshots/t1_home_hero.png` image.
+- The scheme catalog and matching-result cards have an AI “More information” action and an official/source link when the catalog record has one. Added official destinations to the legacy sample records that were missing links (CMHT, NSAP pension applications, Kisan Credit Card); these remain labelled demo/sample data even though the links are official.
+- Document Assistant already sends the checked/missing document list to Seva AI. It now also has an AI-generated service/checklist guide modal and a direct official-link button when a service has one. The explainer uses the server-fetched catalog record; the separate chat action includes the user's checked/missing list.
+- The revised PowerPoint and PDF were regenerated from `scripts/build_pitch.py`; the PDF contains six slides and rendered cleanly. Removed placeholder team name/number text. Screenshots were left untouched.
+- Added official destinations to all previously unlinked built-in scheme records that had a findable official landing page. Built-in sample schemes remain labelled demo data regardless of whether they link to an official source.
+- `npm run build` completed successfully after the Document Assistant changes; `git diff --check` passed.
+- Current worktree includes uncommitted presentation, scheme-link and Document Assistant changes. Do not overwrite the screenshot or rebuild the presentation from a different image without the user asking.
+
 ## User goals in progress
 
 - Fix Vercel complaint submission returning 404.
