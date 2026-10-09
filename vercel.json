@@ -3,6 +3,7 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "rewrites": [
+    { "source": "/api/complaints/track/:id", "destination": "/api/complaints?path=track/:id" },
     { "source": "/api/complaints/meta", "destination": "/api/complaints?path=meta" },
     { "source": "/api/ai/conversations/:id", "destination": "/api/ai/chat?path=conversations/:id" },
     { "source": "/api/ai/conversations", "destination": "/api/ai/chat?path=conversations" },

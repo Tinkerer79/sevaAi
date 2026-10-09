@@ -44,6 +44,7 @@ Keep a secure backup: losing the key means encrypted complaint contacts and save
 
 - The user-referenced `seva-ai-project-enclave.vercel.app` deployment is behind Vercel login protection in the available browser, so its app pages could not be inspected there.
 - Earlier browser checks found the public `seva-ai-gold.vercel.app` route responds to API JSON and navigation worked. That does not establish the protected deployment's current health.
+- Deployment for commit `720dbdc` reached Ready and aliases `seva-ai-gold.vercel.app` and `seva-ai-project-enclave.vercel.app`. Smoke checks found `/api/complaints/meta` and complaint tracking still failed because Vercel preserves the source path during rewrites; a follow-up rewrite/handler fix is now in the worktree and needs its own commit/push. `/assistant` and `/schemes` direct loads returned the SPA successfully.
 - Optional complaint photo uploads are still unavailable in the Vercel complaint handler; a submission with a photo gets a clear 400 response. The user's captured failing request had no photo.
 - No live form submission or OAuth sign-in was performed.
 
@@ -51,18 +52,19 @@ Keep a secure backup: losing the key means encrypted complaint contacts and save
 
 - Repository: `/home/tombi/sevaAi`
 - Branch: `master`; prior HEAD `9ff2ceb`; remote `origin` is `https://github.com/Tinkerer79/sevaAi.git`.
-- Changes are currently uncommitted. The user authorized committing and pushing.
-- Latest production Vite build passed (`npm run build`, Vite 5.4.21). Node syntax checks passed for the API files checked; `git diff --check` passed before the last edits.
-- Re-run `git diff --check`, inspect `git status`, ensure no `.env` or generated key is staged, stage and commit the intended code/docs/migrations, and push `master` to `origin`.
-- After push, inspect Vercel deployment status. Then verify complaint submission/tracking, signed-in chat history/context, admin summary/update, and direct route navigation on a deployment the browser can access.
+- Commit `720dbdc` was pushed to `origin/master`; a complaint metadata/tracking rewrite fix is now uncommitted.
+- Latest production Vite build passed after the rewrite fix (`npm run build`, Vite 5.4.21). All API files passed `node --check`; function count is 12; `git diff --check` passed.
+- Stage and commit the follow-up, ensure `.env` and the generated key are not staged, then push `master` to `origin`.
+- Inspect the new Vercel deployment. Recheck `/api/complaints/meta`, `/api/complaints/track/SM-2026-10482`, complaint submission without creating test data if possible, signed-in chat history/context, admin summary/update, and direct route navigation.
 
 ### Remaining checklist
 
 - [x] Add AES key to Vercel Production and Preview as a hidden secret.
 - [x] Apply Supabase migrations and seed demo complaint rows.
 - [x] Keep Vercel function count within Hobby limit (12).
-- [ ] Commit and push the worktree changes.
-- [ ] Confirm the pushed Vercel deployment succeeds and run end-to-end smoke checks.
+- [x] Commit and push the main implementation (`720dbdc`).
+- [ ] Commit/push the complaint rewrite follow-up and confirm its Vercel deployment succeeds.
+- [ ] Finish deployment smoke checks, including the complaint paths.
 - [ ] Have a qualified reviewer assess privacy notices, legal basis/consent, retention/deletion, breach response, vendor terms and any child-user requirements before presenting this as compliant.
 - [ ] Optional: provision private photo storage if Vercel complaint photo uploads are required.
 

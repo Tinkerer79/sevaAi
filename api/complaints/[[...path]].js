@@ -50,7 +50,9 @@ export default async function handler(req, res) {
   if (cors(req, res)) return;
   const pathname = new URL(req.url, 'http://local').pathname;
   const query = new URL(req.url, 'http://local').searchParams;
-  if (req.method === 'GET' && pathname.replace(/\/$/, '') === '/api/complaints' && query.get('path') === 'meta') {
+  const normalizedPath = pathname.replace(/\/$/, '');
+  if (req.method === 'GET' && query.get('path') === 'meta'
+    && ['/api/complaints', '/api/complaints/meta'].includes(normalizedPath)) {
     return json(res, 200, { categories: CATEGORIES, districts: DISTRICTS });
   }
   if (req.method === 'POST' && pathname.replace(/\/$/, '') === '/api/complaints') {
@@ -88,7 +90,8 @@ export default async function handler(req, res) {
   }
 
   if (req.method !== 'GET') return json(res, 405, { error: 'Method not allowed.' });
-  const match = pathname.match(/^\/api\/complaints\/track\/([^/]+)\/?$/);
+  const match = pathname.match(/^\/api\/complaints\/track\/([^/]+)\/?$/)
+    || query.get('path')?.match(/^track\/([^/]+)$/);
   if (!match) return json(res, 404, { error: 'Complaint endpoint not found.' });
   let id;
   try { id = decodeURIComponent(match[1]).trim().toUpperCase().slice(0, 20); }
