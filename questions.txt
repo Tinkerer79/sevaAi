@@ -1,0 +1,11 @@
+The **innovative part isn’t just “using AI to find schemes.”** It’s the way SevaManipur AI turns a confusing search into a guided, explainable process for Manipur:
+
+- People enter basic details and get a shortlist with **reasons for each match**, rather than an unexplained AI decision.
+- They can continue from a possible match to **documents, application steps, and plain-language help** in one flow.
+- The system presents results as guidance, not approval: **the department makes the final eligibility decision**.
+
+A concise pitch could be: **“A local welfare navigator that explains why a scheme may fit and helps citizens take the next step, without pretending to make the department’s decision.”**
+
+Be precise in the demo: the current matcher checks age, occupation, area, and income; scheme-specific checks still need to be added for factors like disability or widow status.
+
+
